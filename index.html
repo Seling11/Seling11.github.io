@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <title>ADDL_CPU_Group1 工具导航</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg: #fbfdff;
+      --card: #ffffff;
+      --muted: #7b7f86;
+      --accent: #1976d2;
+      --good: #2e7d32;
+      --danger: #d32f2f;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background: linear-gradient(90deg,#f4f8ff 0%, var(--bg) 100%);
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color:#222;
+      padding:28px;
+      -webkit-font-smoothing:antialiased;
+    }
+    h1{
+      font-size:48px;
+      margin:60px 0 18px;
+      text-align:center;
+      color:#0b4a7a;
+    }
+    .subtitle{ text-align:center; color:#7b7f86; font-size:24px; margin-bottom:24px; }
+
+    .container{
+      max-width:1100px;
+      margin:40px auto;
+      background: var(--card);
+      border-radius:12px;
+      box-shadow: 0 8px 26px rgba(20,40,80,0.04);
+      padding:32px 24px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(260px, 1fr));
+      gap:24px;
+    }
+
+    a.btn-card{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:28px 24px;
+      border-radius:12px;
+      background:#fff;
+      color:#0b4a7a;
+      text-decoration:none;
+      font-weight:700;
+      font-size:20px;
+      box-shadow: 0 6px 18px rgba(8,24,48,0.06);
+      border:1px solid #eef2f7;
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      min-height:120px;
+    }
+    a.btn-card:hover, a.btn-card:focus{
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(20,40,80,0.12);
+      border-color:#d8e2ef;
+      outline:none;
+    }
+    a.btn-card:focus-visible{
+      box-shadow: 0 0 0 3px rgba(25,118,210,0.25), 0 12px 28px rgba(20,40,80,0.12);
+    }
+    .btn-title{ display:block; }
+
+    @media (max-width:900px){
+      .grid{ grid-template-columns: 1fr; }
+      h1{ font-size:36px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>ADDL_CPU_Group1 工具导航</h1>
+  <div class="subtitle">作者：周圣业 X ChatGPT</div>
+
+  <div class="container">
+    <div class="grid">
+      <a class="btn-card" href="./index1.html" aria-label="前往 ADDL_CPU_Group1 指令集（R + I + J型）">
+        <span class="btn-title">ADDL_CPU_Group1 指令集（R + I + J型）</span>
+      </a>
+      <a class="btn-card" href="./index2.html" aria-label="前往 ADDL_CPU_Group1 汇编与机器码互转工具">
+        <span class="btn-title">ADDL_CPU_Group1 汇编与机器码互转工具</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

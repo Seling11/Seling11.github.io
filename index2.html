@@ -423,6 +423,48 @@
       updateLineNums(machineInput, machineLineNums);
       updateHexLineNums(machineInput, hexLineNums);
     }
+
+    ///////////////////////////////////////////////////////////////////////
+
+    // 页面加载时，尝试读取同目录下的 test.s 并填充到“汇编代码”输入框
+    (async function preloadAsmFromTest(){
+      const statusEl = document.getElementById('preloadStatus');
+      // 如果是在 file:// 协议下，提前提示
+      if (location.protocol === 'file:') {
+        statusEl.style.color = '#d32f2f';
+        statusEl.textContent = '检测到使用 file:// 打开，浏览器会阻止读取本地文件 test.s，建议用本地服务器 (例如：在 HTML 目录执行 python3 -m http.server 8000)';
+        updateAllLineNums();
+        return; // 直接返回，避免无谓的 fetch 报错
+      }
+      try {
+        const tryPaths = ['test.s', './test.s', './HTML/test.s'];
+        let loaded = false;
+        for (const p of tryPaths) {
+          const resp = await fetch(p + '?_ts=' + Date.now(), { cache: 'no-store' });
+            if (resp.ok) {
+              const txt = await resp.text();
+              asmInput.value = txt.replace(/\r\n?/g, '\n');
+              asmInput.dispatchEvent(new Event('input'));
+              statusEl.style.color = '#2e7d32';
+              statusEl.textContent = '已加载：' + p;
+              loaded = true;
+              break;
+            }
+        }
+        if (!loaded) {
+          statusEl.style.color = '#d32f2f';
+          statusEl.textContent = '未找到 test.s 或服务器未正确指向 HTML 目录';
+          updateAllLineNums();
+        }
+      } catch (e) {
+        console.warn('加载 test.s 失败', e);
+        statusEl.style.color = '#d32f2f';
+        statusEl.textContent = '加载 test.s 失败：' + e.message;
+        updateAllLineNums();
+      }
+    })();
+
+    ////////////////////////////////////////////////////////////////////////
   </script>
 </body>
 </html>

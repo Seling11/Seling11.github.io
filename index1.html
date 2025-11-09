@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <title>指令集可视化器</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg: #fbfdff;
+      --card: #ffffff;
+      --muted: #7b7f86;
+      --accent: #1976d2;
+      --good: #2e7d32;
+      --danger: #d32f2f;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background: linear-gradient(90deg,#f4f8ff 0%, var(--bg) 100%);
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color:#222;
+      padding:28px;
+      -webkit-font-smoothing:antialiased;
+    }
+    .wrap{max-width:1100px;margin:0 auto; padding-bottom:36px;}
+    h1{font-size:48px;margin:60px 0 18px;text-align:center;color:#0b4a7a;}
+    /* --- first row input --- */
+    .row { display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:20px;}
+    .input {
+      display:flex; align-items:center; gap:14px;
+    }
+    input.binary {
+      width:520px;
+      font-family: monospace;
+      font-size:24px;
+      letter-spacing: 10px;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid #d8e2ef;
+      box-shadow: 0 2px 8px rgba(30,50,80,0.04);
+      text-align:center;
+      background:var(--card);
+    }
+    .error-line{
+      font-size:18px;
+      color:var(--danger);
+      height:24px; /* 保持布局稳定 */
+    }
+
+    /* --- bit grid --- */
+    .bits-area { display:flex; justify-content:center; }
+    .group {
+      display:flex;
+      gap:10px; /* bit 内部间距 */
+      align-items:center;
+    }
+    .bit {
+      width:40px; height:40px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      font-family: monospace; font-weight:700; font-size:20px;
+      user-select:none; cursor:pointer;
+      transition: transform .12s ease, box-shadow .12s ease;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+    .bit.zero{ background:#eef3f8; color:#38506a; }
+    .bit.one { background:#1e88e5; color:white; }
+    .bit:hover{ transform: translateY(-3px); box-shadow: 0 8px 18px rgba(30,60,110,0.12); }
+
+    /* group spacing: we'll control via inline styles for asymmetric gaps */
+    .g-gap-lg { margin-right: 36px; }   /* between group0 and group1 (大) */
+    .g-gap-md { margin-right: 18px; }   /* between group1 and group2 (中) */
+    .g-gap-sm { margin-right: 8px; }    /* between group2 and group3 (小) */
+
+    /* --- assembly & description rows --- */
+    .asm-row, .desc-row {
+      text-align:center;
+      font-size:22px;
+      padding:10px 16px;
+      border-radius:10px;
+      background: rgba(255,255,255,0.85);
+      min-height:52px;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 6px 18px rgba(8,24,48,0.06);
+      margin-bottom:12px;
+      font-weight:600;
+    }
+    .asm-row { font-family: monospace; letter-spacing:1px; color:#0e3a63; }
+
+    /* tokens in natural language */
+    .tokens { display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:center; }
+    .token { padding:8px 12px; border-radius:8px; font-weight:700; font-size:20px; }
+    .token.reg { background: #e3f2fd; color:#0b4a7a; border:1px solid rgba(13,74,122,0.06); }
+    .token.imm { background: #fff3e0; color:#a84b00; border:1px solid rgba(168,75,0,0.06); }
+    .token.op  { background: #e8f5e9; color:#2e7d32; border:1px solid rgba(46,125,50,0.06); }
+    .token.action { background:#fce4ec; color:#8b0035; border:1px solid rgba(139,0,53,0.04); }
+
+    /* --- instruction table --- */
+    .table-wrap { margin-top:28px; margin-bottom:12px; background: #fff; border-radius:12px; padding:18px; box-shadow: 0 8px 26px rgba(20,40,80,0.04); }
+    table { width:100%; border-collapse: collapse; font-size:15px; }
+    th, td{ padding:12px 10px; border-bottom:1px solid #eef2f7; text-align:left; }
+    th{ background:transparent; color:#0b4a7a; font-weight:700; }
+    .section-title { font-size:17px; margin:18px 0 8px; color:#0b4a7a; font-weight:700; }
+    @media(max-width:800px){
+      input.binary{ width:92%; font-size:20px;}
+      .bit{ width:34px; height:34px; font-size:18px;}
+      .asm-row, .desc-row{ font-size:18px; }
+    }
+    .row.bits-area {
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>ADDL_CPU_Group1 指令集（R + I + J型）</h1>
+    <div style="text-align:center; color:#7b7f86; font-size:24px; margin-bottom:24px;">
+      作者：周圣业 X ChatGPT
+    </div>
+    <!-- 第一行：输入 -->
+    <div class="row">
+      <div class="input">
+        <input id="machineInput" class="binary" maxlength="16" placeholder="请输入16位二进制机器码（例如：0000000100100011）" />
+      </div>
+      <div id="errorMsg" class="error-line"></div>
+    </div>
+
+    <!-- 第二行：图像化位显示 -->
+    <div class="row bits-area">
+      <div id="group0" class="group g-gap-lg"></div>
+      <div id="group1" class="group g-gap-md"></div>
+      <div id="group2" class="group g-gap-sm"></div>
+      <div id="group3" class="group"></div>
+    </div>
+
+    <!-- 第三行：汇编 -->
+    <div id="asmRow" class="asm-row">汇编指令将显示在此处</div>
+
+    <!-- 第四行：自然语言 -->
+    <div id="descRow" class="desc-row">
+      <div class="tokens" id="tokensArea">
+        指令含义将显示在此处
+      </div>
+    </div>
+
+    <!-- 指令表 -->
+    <div class="table-wrap">
+      <table>
+        <!-- R型指令 -->
+        <thead>
+          <tr>
+            <th style="text-align: center;">指令类型</th>
+            <th style="text-align: center;">Opcode [15:12]</th>
+            <th style="text-align: center;">Rd [11:8]</th>
+            <th style="text-align: center;">Rs [7:4]</th>
+            <th style="text-align: center;">Rt [3:0]</th>
+            <th>Assembly</th>
+            <th>Function Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="8" style="text-align: center;">R 型指令<br/>(Register-Register)</td>
+            <td style="text-align: center;">0000</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">xxxx</td>
+            <td>MOV Rd, Rs</td>
+            <td>Rd ← Rs</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0001</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">Rt</td>
+            <td>ADD Rd, Rs, Rt</td>
+            <td>Rd ← Rs + Rt</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0010</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">Rt</td>
+            <td>SUB Rd, Rs, Rt</td>
+            <td>Rd ← Rs - Rt</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0011</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">Rt</td>
+            <td>MUL Rd, Rs, Rt</td>
+            <td>Rd ← Rs × Rt</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0100</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">Rt</td>
+            <td>DIV Rd, Rs, Rt</td>
+            <td>Rd ← Rs ÷ Rt</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0101</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">Rt</td>
+            <td>AND Rd, Rs, Rt</td>
+            <td>Rd ← Rs & Rt</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0110</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">Rt</td>
+            <td>OR Rd, Rs, Rt</td>
+            <td>Rd ← Rs | Rt</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0111</td>
+            <td style="text-align: center;">xxxx</td>
+            <td style="text-align: center;">Rs</td>
+            <td style="text-align: center;">Rt</td>
+            <td>CMP Rs, Rt</td>
+            <td>设置16bit标志位</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;"></td>
+            <td style="text-align: center;"></td>
+                  <td style="text-align: center;"></td>
+            <td style="text-align: center;" colspan="2"></td>
+            <td></td>
+            <td></td>
+          </tr>
+        <!-- I型指令 -->
+        <thead>
+          <tr>
+            <th style="text-align: center;">指令类型</th>
+            <th style="text-align: center;">Opcode [15:12]</th>
+            <th style="text-align: center;">Rd [11:8]</th>
+            <th style="text-align: center;" colspan="2">Imm [7:0]</th>
+            <th>Assembly</th>
+            <th>Function Description</th>
+          </tr>
+        </thead>
+          <tr>
+            <td rowspan="5" style="text-align: center;">I 型指令<br/>(Register-Immediate)</td>
+            <td style="text-align: center;">1000</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>MOVI Rd, #Imm</td>
+            <td>Rd ← Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">1001</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>ADDI Rd, #Imm</td>
+            <td>Rd ← Rd + Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">1010</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>SUBI Rd, #Imm</td>
+            <td>Rd ← Rd - Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">1011</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>ST Rd, [Imm]</td>
+            <td>Mem[Imm] ← Rd</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">1100</td>
+            <td style="text-align: center;">Rd</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>LD Rd, [Imm]</td>
+            <td>Rd ← Mem[Imm]</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;"></td>
+            <td style="text-align: center;"></td>
+            <td style="text-align: center;" colspan="2"></td>
+            <td></td>
+            <td></td>
+          </tr>
+        <!-- J型指令 -->
+        <thead>
+          <tr>
+            <th style="text-align: center;">指令类型</th>
+            <th style="text-align: center;">Opcode [15:12]</th>
+            <th style="text-align: center;">Codition [11:8]</th>
+            <th style="text-align: center;" colspan="2">Imm [7:0]</th>
+            <th>Assembly</th>
+            <th>Function Description</th>
+          </tr>
+        </thead>
+      <tr>
+          <td rowspan="8" style="text-align: center;">J 型指令<br/>(Jump-Immediate)</td>
+            <td style="text-align: center;" rowspan="8">1111</td>
+            <td style="text-align: center;">0111</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JMP Imm</td>
+            <td>always Jump PC ← Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0110</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JN Imm</td>
+            <td>never Jump (wait)</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0101</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JEG Imm</td>
+            <td>if (≥) PC ← Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0100</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JEL Imm</td>
+            <td>if (≤) PC ← Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0011</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JG Imm</td>
+            <td>if (>) PC ← Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0010</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JL Imm</td>
+            <td>if (<) PC ← Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0001</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JE Imm</td>
+            <td>if (=) PC ← Imm</td>
+          </tr>
+          <tr>
+            <td style="text-align: center;">0000</td>
+            <td style="text-align: center;" colspan="2">Imm</td>
+            <td>JNE Imm</td>
+            <td>if (≠) PC ← Imm</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+/*
+  代码说明：
+  - bitsArr: 全局 16 位数组（元素 '0' 或 '1'），bitsArr[0]..bitsArr[3] = opcode (从左到右)
+  - 点击 bit 或 在输入框手动输入都会走 updateFromBits()，确保全部同步
+*/
+
+const input = document.getElementById('machineInput');
+const errorMsg = document.getElementById('errorMsg');
+const asmRow = document.getElementById('asmRow');
+const descRow = document.getElementById('descRow');
+const tokensArea = document.getElementById('tokensArea');
+const groups = [
+  document.getElementById('group0'),
+  document.getElementById('group1'),
+  document.getElementById('group2'),
+  document.getElementById('group3')
+];
+
+// 指令定义（包含中文操作词）
+const instrMap = {
+  "0000": { type:"R", name:"MOV",   cnOp:"放入" },
+  "0001": { type:"R", name:"ADD",  cnOp:"加" },
+  "0010": { type:"R", name:"SUB",  cnOp:"减" },
+  "0011": { type:"R", name:"MUL",  cnOp:"乘" },
+  "0100": { type:"R", name:"DIV",  cnOp:"除" },
+  "0101": { type:"R", name:"AND",  cnOp:"与" },
+  "0110": { type:"R", name:"OR",   cnOp:"或" },
+  "0111": { type:"R", name:"CMP",  cnOp:"比较" },
+
+
+  "1000": { type:"I", name:"MOVI",  cnOp:"放入" },
+  "1001": { type:"I", name:"ADDI", cnOp:"加" },
+  "1010": { type:"I", name:"SUBI", cnOp:"减" },
+  "1011": { type:"I", name:"ST",   cnOp:"存入" },
+  "1100": { type:"I", name:"LD",   cnOp:"读入" },
+  // "1101": { type:"I", name:"JZ",   cnOp:"若ZF=1 跳转" },
+  // "1110": { type:"I", name:"JNZ",  cnOp:"若ZF=0 跳转" },
+  "1111": { type:"I", name:"JMP_EXT",   cnOp:"扩展跳转" }
+};
+
+// 全局 bits（字符串数组 '0' / '1'）
+let bitsArr = Array.from("0000000000000000");
+
+// 渲染 group / bits
+function renderBits() {
+  // 每组 4 个 bit：group0 -> bits[0..3], group1 -> bits[4..7], group2 -> bits[8..11], group3 -> bits[12..15]
+  for (let gi=0; gi<4; gi++){
+    const container = groups[gi];
+    container.innerHTML = ""; // clear
+
+    for (let j=0; j<4; j++){
+      const idx = gi*4 + j;
+      const b = bitsArr[idx];
+      const span = document.createElement('div');
+      span.className = 'bit ' + (b==='1' ? 'one' : 'zero');
+      span.textContent = b;
+      span.dataset.index = idx;
+      span.title = `bit ${idx} (global index)`;
+      span.addEventListener('click', ()=> {
+        // flip this bit and update
+        bitsArr[idx] = bitsArr[idx] === '1' ? '0' : '1';
+        updateFromBits();
+      });
+      container.appendChild(span);
+    }
+
+    // set asymmetric margin for groups (already have CSS classes for margins)
+    // But to ensure exact spaces: group0: large, group1: medium, group2: small, group3: none
+    container.style.marginRight = (gi===0) ? '48px' : (gi===1) ? '48px' : (gi===2) ? '48px' : '0';
+  }
+}
+
+// 解析 bits 并更新汇编和自然语言
+function decodeAndRender() {
+  const opcode = bitsArr.slice(0,4).join('');
+  const map = instrMap[opcode];
+
+  if (!map) {
+    asmRow.textContent = "❌ 未知或无效的操作码";
+    tokensArea.innerHTML = `<div style="color:${getComputedStyle(document.documentElement).getPropertyValue('--danger') || '#d32f2f'}; font-weight:700">❌ 未找到对应指令</div>`;
+    return;
+  }
+
+  if (map.type === 'R') {
+    const rd = parseInt(bitsArr.slice(4,8).join(''), 2);
+    const rs = parseInt(bitsArr.slice(8,12).join(''), 2);
+    const rt = parseInt(bitsArr.slice(12,16).join(''), 2);
+
+    // 汇编
+    asmRow.textContent = `${map.name} R${rs}, R${rt}`;
+
+    // 自然语言：将 [Rs] [操作中文] [Rt] 并放入 [Rd]
+    if (map.name === 'CMP') {
+      // CMP 不写入 Rd，特殊描述
+      tokensArea.innerHTML = `
+        <span class="token reg">R${rs}</span>
+        <span class="token op">比较</span>
+        <span class="token reg">R${rt}</span>
+        <span class="token action">并设置标志位(ZF, CF)</span>
+      `;
+    } else if (map.name === 'MOV') {
+      asmRow.textContent = `MOV R${rd}, R${rs}`;
+      tokensArea.innerHTML = `
+        <span class="token imm">R${rs}</span>
+        <span class="token op">${map.cnOp}</span>
+        <span class="token reg">R${rd}</span>
+      `;
+    }
+    else {
+      tokensArea.innerHTML = `
+        <span class="token reg">R${rs}</span>
+        <span class="token op">${map.cnOp}</span>
+        <span class="token reg">R${rt}</span>
+        <span class="token action">并放入</span>
+        <span class="token reg">R${rd}</span>
+      `;
+    }
+  }
+
+  else if (map.type === 'I') {
+    const rdBits = bitsArr.slice(4,8).join(''); // Rd 字段（4位二进制字符串）
+    const rdNum = parseInt(rdBits, 2);
+    const imm = parseInt(bitsArr.slice(8,16).join(''), 2);
+
+    // 处理扩展跳转指令（opcode=1111）
+    if (map.name === 'JMP_EXT') {
+      let instrName = "❌ 未知跳转指令";
+      let cnDesc = "无效的条件码";
+
+      // 根据 Rd 字段选择跳转类型
+      switch(rdBits) {
+        case "0111": // 7
+          instrName = `JMP ${imm}`;
+          cnDesc = `无条件跳转到地址 <span class="token imm">${imm}行</span>`;
+          break;
+        case "0110": // 6
+          instrName = `JN ${imm}`;
+          cnDesc = `从不跳转（等待）</span>`;
+          break;
+        case "0101": // 5
+          instrName = `JEG ${imm}`;
+          cnDesc = `如果大于等于则跳转到 <span class="token imm">${imm}行</span>`;
+          break;
+        case "0100": // 4
+          instrName = `JEL ${imm}`;
+          cnDesc = `如果小于等于则跳转到 <span class="token imm">${imm}行</span>`;
+          break;
+        case "0011": // 3
+          instrName = `JG ${imm}`;
+          cnDesc = `如果大于则跳转到 <span class="token imm">${imm}行</span>`;
+          break;
+        case "0010": // 2
+          instrName = `JL ${imm}`;
+          cnDesc = `如果小于则跳转到 <span class="token imm">${imm}行</span>`;
+          break;
+        case "0001": // 1
+          instrName = `JE ${imm}`;
+          cnDesc = `如果等于则跳转到 <span class="token imm">${imm}行</span>`;
+          break;
+        case "0000": // 0
+          instrName = `JNE ${imm}`;
+          cnDesc = `如果不等于则跳转到 <span class="token imm">${imm}行</span>`;
+          break;
+      }
+
+      asmRow.textContent = instrName;
+      tokensArea.innerHTML = cnDesc;
+      return;
+    }
+
+    // 其他 I 型指令处理
+    if (map.name === 'MOVI') {
+      asmRow.textContent = `MOVI R${rdNum}, #${imm}`;
+      tokensArea.innerHTML = `
+        <span class="token imm">#${imm}</span>
+        <span class="token op">${map.cnOp}</span>
+        <span class="token reg">R${rdNum}</span>
+      `;
+    } else if (map.name === 'ADDI') {
+      asmRow.textContent = `ADDI R${rdNum}, #${imm}`;
+      tokensArea.innerHTML = `
+        <span class="token reg">R${rdNum}</span>
+        <span class="token op">加</span>
+        <span class="token imm">#${imm}</span>
+        <span class="token action">并放入</span>
+        <span class="token reg">R${rdNum}</span>
+      `;
+    } else if (map.name === 'SUBI') {
+      asmRow.textContent = `SUBI R${rdNum}, #${imm}`;
+      tokensArea.innerHTML = `
+        <span class="token reg">R${rdNum}</span>
+        <span class="token op">减</span>
+        <span class="token imm">#${imm}</span>
+        <span class="token action">并放入</span>
+        <span class="token reg">R${rdNum}</span>
+      `;
+    } else if (map.name === 'ST') {
+      asmRow.textContent = `ST R${rdNum}, [${imm}]`;
+      tokensArea.innerHTML = `
+        <span class="token reg">R${rdNum}</span>
+        <span class="token op">存入</span>
+        <span class="token imm">[${imm}]</span>
+      `;
+    } else if (map.name === 'LD') {
+      asmRow.textContent = `LD R${rdNum}, [${imm}]`;
+      tokensArea.innerHTML = `
+        <span class="token imm">[${imm}]</span>
+        <span class="token op">读入</span>
+        <span class="token reg">R${rdNum}</span>
+      `;
+    } else if (map.name === 'JZ' || map.name === 'JNZ' || map.name === 'JC') {
+      let condText = map.name === 'JZ' ? 'ZF==1 时跳转' : map.name === 'JNZ' ? 'ZF==0 时跳转' : 'CF==1 时跳转';
+      asmRow.textContent = `${map.name} ${imm}`;
+      tokensArea.innerHTML = `
+        <span class="token op">${condText}</span>
+        <span class="token imm">${imm}</span>
+      `;
+    } else {
+      // 兜底处理
+      asmRow.textContent = `${map.name} R${rdNum}, #${imm}`;
+      tokensArea.innerHTML = `
+        <span class="token imm">#${imm}</span>
+        <span class="token op">${map.cnOp}</span>
+        <span class="token reg">R${rdNum}</span>
+      `;
+    }
+  }
+}
+
+// 从 bitsArr 更新 input 与渲染（当点击 bit 或程序修改 bitsArr 时调用）
+function updateFromBits() {
+  // 同步文本框
+  input.value = bitsArr.join('');
+  // 清除错误
+  errorMsg.textContent = '';
+  // 渲染 bit 网格
+  renderBits();
+  // 解析并显示汇编/自然语言
+  decodeAndRender();
+}
+
+// 从输入框读取并更新 bitsArr（用户手动输入时调用）
+function updateFromInput() {
+  const v = (input.value || '').trim();
+  if (!/^[01]{16}$/.test(v)) {
+    // 显示错误（在输入框下方那一行）
+    errorMsg.textContent = '❌ 请输入16位二进制字符串';
+    // 清空位图与下方显示（避免误导）
+    groups.forEach(g=>g.innerHTML='');
+    asmRow.textContent = '---';
+    tokensArea.innerHTML = `<div style="color:${getComputedStyle(document.documentElement).getPropertyValue('--danger') || '#d32f2f'}; font-weight:700">❌ 无效输入</div>`;
+    return;
+  }
+  // 合法：更新 bitsArr
+  bitsArr = v.split('');
+  errorMsg.textContent = '';
+  updateFromBits();
+}
+
+// 监听输入框
+input.addEventListener('input', updateFromInput);
+
+// 初始渲染
+updateFromBits();
+
+</script>
+</body>
+</html>

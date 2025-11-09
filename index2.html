@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <title>汇编与机器码互转工具</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root{
+      --bg: #fbfdff;
+      --card: #ffffff;
+      --muted: #7b7f86;
+      --accent: #1976d2;
+      --good: #2e7d32;
+      --danger: #d32f2f;
+    }
+    body{
+      margin:0;
+      background: linear-gradient(90deg,#f4f8ff 0%, var(--bg) 100%);
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color:#222;
+      padding:28px;
+      -webkit-font-smoothing:antialiased;
+    }
+    h1{
+        font-size:48px;
+        margin:60px 0 18px;
+        text-align:center;
+        color:#0b4a7a;
+    }
+    .container{
+      max-width:1100px;
+      margin:40px auto;
+      background: var(--card);
+      border-radius:12px;
+      box-shadow: 0 8px 26px rgba(20,40,80,0.04);
+      padding:32px 24px;
+      display: flex;
+      gap:48px;
+      align-items: flex-start;
+    }
+    .panel{
+      flex:1;
+      display: flex;
+      flex-direction: column;
+      gap:18px;
+    }
+    .panel label{
+      font-size:20px;
+      color: #0b4a7a;
+      font-weight:700;
+      margin-bottom:8px;
+    }
+    .input-wrap{
+      display: flex;
+      align-items: flex-start;
+      position: relative;
+    }
+    .line-nums{
+      text-align: right;
+      color: var(--muted);
+      font-size:18px;
+      padding-right:8px;
+      min-width:32px;
+      user-select:none;
+      line-height:1.7;
+      font-family: monospace;
+      margin-top:12px;
+    }
+    textarea{
+      width:100%;
+      height:520px;
+      font-family: monospace;
+      font-size:18px;
+      padding:12px 14px;
+      border-radius:8px;
+      border:1px solid #d8e2ef;
+      box-shadow: 0 2px 8px rgba(30,50,80,0.04);
+      background:var(--card);
+      color:#222;
+      resize: vertical;
+      box-sizing: border-box;
+      line-height:1.7;
+    }
+    .error{
+      color:var(--danger);
+      font-size:16px;
+      min-height:24px;
+      margin-top:4px;
+    }
+    @media(max-width:900px){
+      .container{ flex-direction:column; gap:24px;}
+      textarea{height:520px;}
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center; color:#0b4a7a; margin-bottom:18px;">ADDL_CPU_Group1 汇编与机器码互转工具</h1>
+  <div style="text-align:center; color:#7b7f86; font-size:24px; margin-bottom:24px;">
+    作者：周圣业 X ChatGPT
+  </div>
+  <div class="container">
+    <div class="panel">
+      <label for="asmInput">汇编代码（支持多行，自动编号）</label>
+      <div class="input-wrap">
+        <div id="asmLineNums" class="line-nums"></div>
+        <textarea id="asmInput" placeholder="每行一条汇编指令，支持注释和标签"></textarea>
+      </div>
+      <div id="asmError" class="error"></div>
+    </div>
+    <div class="panel">
+      <label for="machineInput">机器码（支持多行，自动编号）</label>
+      <div class="input-wrap">
+        <div id="machineLineNums" class="line-nums"></div>
+        <textarea id="machineInput" placeholder="每行一条机器码，支持注释和标签"></textarea>
+        <div id="hexLineNums" class="line-nums" style="color:#1976d2; min-width:70px; text-align:left; margin-left:8px;"></div>
+      </div>
+      <div id="machineError" class="error"></div>
+    </div>
+  </div>
+  <script>
+    // 指令定义
+    // const instrMap = {
+    //   "ADD":  "0000", "SUB":  "0001", "MUL":  "0010", "DIV":  "0011",
+    //   "AND":  "0100", "OR":   "0101", "CMP":  "0110", "MOV":  "0111",
+    //   "MOVI": "1000", "ADDI": "1001", "SUBI": "1010", "ST":   "1011",
+    //   "LD":   "1100", "JZ":   "1101", "JNZ":  "1110", "JC":   "1111"
+    // };
+    const instrMap = {
+      "MOV":  "0000", "ADD":  "0001", "SUB":  "0010", "MUL":  "0011", 
+      "DIV":  "0100", "AND":  "0101", "OR":   "0110", "CMP":  "0111", 
+      "MOVI": "1000", "ADDI": "1001", "SUBI": "1010", "ST":   "1011",
+      "LD":   "1100", "JC":   "1111"  // 保留 JC 作为占位符，实际用于跳转指令
+    };
+    const jumpMap = {
+      "JMP": "0111",
+      "JN":  "0110",
+      "JEG": "0101",
+      "JEL": "0100",
+      "JG":  "0011",
+      "JL":  "0010",
+      "JE":  "0001",
+      "JNE": "0000"
+    };
+    const reverseMap = Object.fromEntries(Object.entries(instrMap).map(([k,v])=>[v,k]));
+
+    const asmInput = document.getElementById('asmInput');
+    const machineInput = document.getElementById('machineInput');
+    const asmError = document.getElementById('asmError');
+    const machineError = document.getElementById('machineError');
+    const asmLineNums = document.getElementById('asmLineNums');
+    const machineLineNums = document.getElementById('machineLineNums');
+    let isSyncing = false;
+
+    const hexLineNums = document.getElementById('hexLineNums');
+
+    // 判断是否为注释或label
+    function isCommentOrLabel(line) {
+      const trimmed = line.trim();
+      return trimmed.startsWith('//') || trimmed.startsWith(';') || trimmed.startsWith('#') || /^[\w\-]+:$/.test(trimmed) || trimmed === '';
+    }
+    function stripInlineComment(line) {
+      // 只保留分号前面的内容
+      return line.split(';')[0].trim();
+    }
+
+    // 汇编转机器码
+    function asmToMachineLines(asmText) {
+      const lines = asmText.split('\n');
+      let result = [];
+      let lineNum = 1;
+      let hasError = false;
+      for (let line of lines) {
+        if (isCommentOrLabel(line)) {
+          result.push(line);
+          continue;
+        }
+        let code = asmToMachine(stripInlineComment(line));
+        if (code) {
+          result.push(code);
+          lineNum++;
+        } else if (line.trim() !== '') {
+          result.push('');
+          hasError = true;
+          lineNum++;
+        }
+      }
+      return {text: result.join('\n'), error: hasError};
+    }
+
+    // 机器码转汇编
+    function machineToAsmLines(machineText) {
+      const lines = machineText.split('\n');
+      let result = [];
+      let lineNum = 1;
+      let hasError = false;
+      for (let line of lines) {
+        if (isCommentOrLabel(line)) {
+          result.push(line);
+          continue;
+        }
+        let code = line.replace(/^\d+\.\s*/, '').trim();
+        if (/^[01]{16}$/.test(code)) {
+          let asm = machineToAsm(code);
+          if (asm) {
+            result.push(asm);
+            lineNum++;
+          } else {
+            result.push('');
+            hasError = true;
+            lineNum++;
+          }
+        } else if (code !== '') {
+          result.push('');
+          hasError = true;
+          lineNum++;
+        }
+      }
+      return {text: result.join('\n'), error: hasError};
+    }
+
+    // 单行汇编转机器码
+    function asmToMachine(asm) {
+      asm = asm.trim().replace(/\s+/g, ' ');
+      if (!asm) return '';
+
+      // R 型指令（ADD/SUB/AND/OR/MUL/DIV/CMP）
+      let r = /^([A-Z]+)\s+R(\d+),\s*R(\d+),\s*R(\d+)$/.exec(asm);
+      if (r) {
+        let [_, op, rd, rs, rt] = r;
+        if (!instrMap[op]) return '';
+        rd = Number(rd); rs = Number(rs); rt = Number(rt);
+        if ([rd,rs,rt].some(x=>x<0||x>15)) return '';
+        return instrMap[op] +
+          rd.toString(2).padStart(4,'0') +
+          rs.toString(2).padStart(4,'0') +
+          rt.toString(2).padStart(4,'0');
+      }
+      // MOVI Rd, #imm
+      r = /^MOVI\s+R(\d+),\s*#(\d+)$/.exec(asm);
+      if (r) {
+        let [_, rd, imm] = r;
+        rd = Number(rd); imm = Number(imm);
+        if (rd<0||rd>15||imm<0||imm>255) return '';
+        return instrMap["MOVI"] +
+          rd.toString(2).padStart(4,'0') +
+          Number(imm).toString(2).padStart(8,'0');
+      }
+      // ADDI/SUBI/ST/LD
+      r = /^((ADDI|SUBI|ST|LD))\s+R(\d+),\s*#(\d+)$/.exec(asm);
+      if (r) {
+        let [_, op, , rd, imm] = r;
+        rd = Number(rd); imm = Number(imm);
+        if (rd<0||rd>15||imm<0||imm>255) return '';
+        return instrMap[op] +
+          rd.toString(2).padStart(4,'0') +
+          Number(imm).toString(2).padStart(8,'0');
+      }
+      // r = /^(JZ|JNZ|JC)\s+(\d+)$/.exec(asm);
+      // if (r) {
+      //   let [_, op, imm] = r;
+      //   imm = Number(imm);
+      //   if (imm<0||imm>255) return '';
+      //   return instrMap[op] + "0000" + Number(imm).toString(2).padStart(8,'0');
+      // }
+      // 跳转指令（JMP, JN, JEG, JE, JNE 等）
+      r = /^(JMP|JN|JEG|JEL|JG|JL|JE|JNE)\s+(\d+)$/.exec(asm);
+        if (r) {
+          let [_, op, immStr] = r;
+          let imm = parseInt(immStr, 10);
+          if (imm < 0 || imm > 255) return '';
+          let rdBits = jumpMap[op];
+          return instrMap["JC"] + rdBits + imm.toString(2).padStart(8,'0');
+        }
+      // MOV Rd, Rs
+      r = /^MOV\s+R(\d+),\s*R(\d+)$/.exec(asm);
+      if (r) {
+        let [_, rd, rs] = r;
+        rd = Number(rd); rs = Number(rs);
+        if (rd<0||rd>15||rs<0||rs>15) return '';
+        return instrMap["MOV"] +
+          rd.toString(2).padStart(4,'0') +
+          rs.toString(2).padStart(4,'0') +
+          "0000";
+      }
+      // CMP Rs, Rt
+      r = /^CMP\s+R(\d+),\s*R(\d+)$/.exec(asm);
+      if (r) {
+        let [_, rs, rt] = r;
+        rs = Number(rs); rt = Number(rt);
+        if ([rs,rt].some(x=>x<0||x>15)) return '';
+        return instrMap["CMP"] +
+          "0000" + // Rd 字段为 0000
+          rs.toString(2).padStart(4,'0') +
+          rt.toString(2).padStart(4,'0');
+      }
+    }
+
+    function machineToAsm(code) {
+      if (!/^[01]{16}$/.test(code)) return '';
+      let opcode = code.slice(0,4);
+      let rdBits = code.slice(4,8); // Rd 字段（4位）
+      let rsBits = code.slice(8,12);
+      let rtBits = code.slice(12,16);
+      let rd = parseInt(rdBits, 2);
+      let rs = parseInt(rsBits, 2);
+      let rt = parseInt(rtBits, 2);
+      let imm = parseInt(code.slice(8,16), 2);
+      let op = reverseMap[opcode];
+      if (!op) return '';
+
+      // MOV Rd, Rs
+      if (op === "MOV") {
+        if (rs === 0 && rt === 0) return `MOV R${rd}, R0`;
+        return `MOV R${rd}, R${rs}`;
+      }
+      // CMP Rs, Rt（特殊处理：Rd字段全0）
+      if (op === "CMP" && rd === 0) {
+        return `CMP R${rs}, R${rt}`;
+      }
+
+      // R 型指令
+      if (["ADD","SUB","MUL","DIV","AND","OR"].includes(op)) {
+        return `${op} R${rd}, R${rs}, R${rt}`;
+      }
+
+      // I 型指令（MOVI, ADDI, SUBI, ST, LD）
+      if (["MOVI","ADDI","SUBI","ST","LD"].includes(op)) {
+        let asmOp = op === "MOVI" ? "MOVI" : op;
+        return `${asmOp} R${rd}, #${imm}`;
+      }
+
+      // 跳转指令（opcode = 1111）
+      if (op === "JC") {
+        switch(rdBits) {
+          case "0111": return `JMP ${imm}`;
+          case "0110": return `JN ${imm}`;
+          case "0101": return `JEG ${imm}`;
+          case "0100": return `JEL ${imm}`;
+          case "0011": return `JG ${imm}`;
+          case "0010": return `JL ${imm}`;
+          case "0001": return `JE ${imm}`;
+          case "0000": return `JNE ${imm}`;
+          default: return '';
+        }
+      }
+      return '';
+    }
+
+    function updateHexLineNums(textarea, hexDiv) {
+      const lines = textarea.value.split('\n');
+      let html = '';
+      for (let line of lines) {
+        let code = line.replace(/^\d+\.\s*/, '').trim();
+        if (/^[01]{16}$/.test(code)) {
+          let hex = parseInt(code, 2).toString(16).toUpperCase().padStart(4, '0');
+          html += hex + '<br>';
+        } else {
+          html += '<br>';
+        }
+      }
+      hexDiv.innerHTML = html;
+    }
+
+    // 序号生成
+    function updateLineNums(textarea, lineNumsDiv) {
+      const lines = textarea.value.split('\n');
+      let html = '';
+      let num = 0;
+      for (let line of lines) {
+        if (isCommentOrLabel(line)) {
+          html += '<br>';
+        } else {
+          html += num++ + '.<br>';
+        }
+      }
+      lineNumsDiv.innerHTML = html;
+    }
+
+    // 同步高度函数
+    function syncHeight(e) {
+      if (e.target === asmInput) {
+        machineInput.style.height = asmInput.style.height;
+      } else if (e.target === machineInput) {
+        asmInput.style.height = machineInput.style.height;
+      }
+    }
+    
+    // 监听 textarea 的高度变化
+    asmInput.addEventListener('mouseup', syncHeight);
+    asmInput.addEventListener('keyup', syncHeight);
+    machineInput.addEventListener('mouseup', syncHeight);
+    machineInput.addEventListener('keyup', syncHeight);
+
+    // 汇编输入事件
+    asmInput.addEventListener('input', ()=>{
+      if (isSyncing) return;
+      isSyncing = true;
+      const asmText = asmInput.value;
+      const {text, error} = asmToMachineLines(asmText);
+      machineInput.value = text;
+      asmError.textContent = error ? '❌ 有行无法转换为机器码（请检查格式）' : '';
+      machineError.textContent = '';
+      updateAllLineNums();
+      isSyncing = false;
+    });
+
+    // 机器码输入事件
+    machineInput.addEventListener('input', ()=>{
+      if (isSyncing) return;
+      isSyncing = true;
+      const machineText = machineInput.value;
+      const {text, error} = machineToAsmLines(machineText);
+      asmInput.value = text;
+      machineError.textContent = error ? '❌ 有行无法转换为汇编（请检查格式）' : '';
+      asmError.textContent = '';
+      updateAllLineNums();
+      isSyncing = false;
+    });
+
+    // 汇总所有行号和16进制栏的更新
+    function updateAllLineNums() {
+      updateLineNums(asmInput, asmLineNums);
+      updateLineNums(machineInput, machineLineNums);
+      updateHexLineNums(machineInput, hexLineNums);
+    }
+  </script>
+</body>
+</html>

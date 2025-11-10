@@ -310,7 +310,7 @@
           <tr>
             <td style="text-align: center;">0110</td>
             <td style="text-align: center;" colspan="2">Imm</td>
-            <td>JN Imm</td>
+            <td>NOP Imm</td>
             <td>never Jump (wait)</td>
           </tr>
           <tr>
@@ -491,7 +491,7 @@ function decodeAndRender() {
           cnDesc = `无条件跳转到地址 <span class="token imm">${imm}行</span>`;
           break;
         case "0110": // 6
-          instrName = `JN ${imm}`;
+          instrName = `NOP ${imm}`;
           cnDesc = `从不跳转（等待）</span>`;
           break;
         case "0101": // 5

@@ -133,7 +133,7 @@
     };
     const jumpMap = {
       "JMP": "0111",
-      "JN":  "0110",
+      "NOP":  "0110",
       "JEG": "0101",
       "JEL": "0100",
       "JG":  "0011",
@@ -263,7 +263,7 @@
       //   return instrMap[op] + "0000" + Number(imm).toString(2).padStart(8,'0');
       // }
       // 跳转指令（JMP, JN, JEG, JE, JNE 等）
-      r = /^(JMP|JN|JEG|JEL|JG|JL|JE|JNE)\s+(\d+)$/.exec(asm);
+      r = /^(JMP|NOP|JEG|JEL|JG|JL|JE|JNE)\s+(\d+)$/.exec(asm);
         if (r) {
           let [_, op, immStr] = r;
           let imm = parseInt(immStr, 10);
@@ -333,7 +333,7 @@
       if (op === "JC") {
         switch(rdBits) {
           case "0111": return `JMP ${imm}`;
-          case "0110": return `JN ${imm}`;
+          case "0110": return `NOP ${imm}`;
           case "0101": return `JEG ${imm}`;
           case "0100": return `JEL ${imm}`;
           case "0011": return `JG ${imm}`;

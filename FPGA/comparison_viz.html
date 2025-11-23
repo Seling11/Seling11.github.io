@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Comparison: Dynamic vs Fixed Buffering</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --panel-bg: rgba(20, 20, 20, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-cyan: #00f3ff;
+            --accent-green: #0aff00;
+            --accent-red: #ff003c;
+            --accent-yellow: #f7ff00;
+            --text-main: #e0e0e0;
+            --text-dim: #888;
+            --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 0%, #1a2a3a 0%, transparent 60%),
+                linear-gradient(0deg, rgba(0,0,0,0.2) 0%, transparent 1px);
+            background-size: 100% 100%, 100% 4px;
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            margin-bottom: 5px;
+            text-align: center;
+            font-size: 2.2rem;
+            background: linear-gradient(to right, #fff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: var(--font-mono);
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            text-align: center;
+            max-width: 800px;
+            line-height: 1.6;
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .comparison-container {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            max-width: 1400px;
+            justify-content: center;
+            align-items: stretch;
+            perspective: 1000px;
+        }
+
+        .algo-column {
+            flex: 1;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 20px 15px 15px 15px; /* Increased bottom padding */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: transform 0.4s var(--ease-bounce), box-shadow 0.4s ease;
+        }
+
+        .algo-column:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
+            z-index: 10;
+        }
+
+        .algo-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent-yellow);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid rgba(247, 255, 0, 0.2);
+            padding-bottom: 5px;
+            width: 100%;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .algo-desc {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-align: center;
+            height: 20px;
+            line-height: 1.4;
+        }
+
+        /* Visualization Area */
+        .viz-area {
+            width: 100%;
+            height: 400px;
+            position: relative;
+            background: #080808;
+            border-radius: 12px;
+            border: 1px solid #222;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        
+        canvas {
+            mix-blend-mode: screen;
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            width: 100%;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: rgba(0,0,0,0.4);
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s var(--ease-bounce), background 0.2s;
+        }
+        
+        .stat-box:hover {
+            background: rgba(255,255,255,0.03);
+            transform: scale(1.05);
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--accent-green);
+            text-shadow: 0 0 10px rgba(10, 255, 0, 0.3);
+        }
+
+        .stat-value.warning { color: var(--accent-yellow); text-shadow: 0 0 10px rgba(247, 255, 0, 0.3); }
+        .stat-value.danger { color: var(--accent-red); text-shadow: 0 0 10px rgba(255, 0, 60, 0.3); }
+
+        /* Controls */
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            background: rgba(20,20,20,0.8);
+            padding: 15px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        button {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 10px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 1rem;
+            transition: all 0.3s var(--ease-bounce);
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
+            transform: translateY(-2px) scale(1.05);
+        }
+        
+        button:active {
+            transform: translateY(1px) scale(0.95);
+        }
+
+        input[type="range"] {
+            width: 250px;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-cyan);
+            transition: transform 0.2s var(--ease-bounce);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 30px;
+            margin-top: 5px; /* Increased margin from controls */
+            font-size: 0.9rem;
+            color: #aaa;
+            background: rgba(0,0,0,0.3);
+            padding: 10px 25px;
+            border-radius: 20px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
+
+        /* Home Button */
+        .home-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-cyan);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: all 0.3s var(--ease-bounce);
+            z-index: 1000;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .home-btn:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            transform: scale(1.1) rotate(-10deg);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Algorithm Comparison</h1>
+    <div class="subtitle">
+        Comparing <strong>Traditional Fixed Window</strong> buffering vs. <strong>Dynamic Row Buffering (动态行缓存技术)</strong>.<br>
+        Simulating 1080p Distortion Correction.
+    </div>
+
+    <div class="comparison-container">
+        <!-- Traditional Method -->
+        <div class="algo-column">
+            <div class="algo-title">Traditional Method</div>
+            <div class="algo-desc">
+                Buffers a fixed large window (e.g., ±128 lines) to ensure data availability for worst-case distortion.
+            </div>
+            
+            <div class="viz-area" id="viz-traditional">
+                <canvas id="canvas-trad" width="600" height="450"></canvas>
+            </div>
+
+            <div class="stats-panel">
+                <div class="stat-box">
+                    <span class="stat-label">Buffer Usage</span>
+                    <span class="stat-value danger" id="stat-trad-usage">0</span>
+                    <span class="stat-label">Lines</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Max Usage</span>
+                    <span class="stat-value danger" id="stat-trad-max">0</span>
+                    <span class="stat-label">Lines</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Input Row</span>
+                    <span class="stat-value" id="stat-trad-in">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Output Row</span>
+                    <span class="stat-value" id="stat-trad-out">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Method -->
+        <div class="algo-column" style="border-color: var(--accent-green);">
+            <div class="algo-title" style="color: var(--accent-green); border-color: var(--accent-green);">Dynamic Row Buffering</div>
+            <div class="algo-desc">
+                Dynamically tracks exact line requirements. Only buffers new lines when necessary.
+            </div>
+
+            <div class="viz-area" id="viz-dynamic">
+                <canvas id="canvas-dyn" width="600" height="450"></canvas>
+            </div>
+
+            <div class="stats-panel">
+                <div class="stat-box">
+                    <span class="stat-label">Buffer Usage</span>
+                    <span class="stat-value" id="stat-dyn-usage">0</span>
+                    <span class="stat-label">Lines</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Max Usage</span>
+                    <span class="stat-value" id="stat-dyn-max">0</span>
+                    <span class="stat-label">Lines</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Input Row</span>
+                    <span class="stat-value" id="stat-dyn-in">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Output Row</span>
+                    <span class="stat-value" id="stat-dyn-out">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="toggleSim()" id="btn-run">RUN SIMULATION</button>
+        <button onclick="resetSim()">RESET</button>
+        <label>Speed: <input type="range" id="speed-range" min="1" max="100" value="20"></label>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="dot" style="background: #333;"></div> Empty Slot</div>
+        <div class="legend-item"><div class="dot" style="background: var(--accent-cyan);"></div> Buffered Data</div>
+        <div class="legend-item"><div class="dot" style="background: var(--accent-red);"></div> Currently Reading</div>
+    </div>
+
+    <a href="index.html" class="home-btn" title="Back to Home">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    </a>
+
+    <script>
+        // --- Configuration ---
+        const H = 1080;
+        const W = 1920;
+        
+        // 1080p Parameters
+        const K = {
+            fx: 873.30872028, fy: 871.01064717,
+            cx: 977.28981121, cy: 540.80821708, // Adjusted cx/cy for 1080p center approx if needed, but using provided K
+            k1: -0.321590211, k2: 0.110822433
+        };
+        // Note: User provided K has cx=977, cy=540.8.
+        
+        // --- Precomputation ---
+        let rowRequirements = []; // Index = Output Row, Value = {min: int, max: int}
+
+        function undistortPixel(x, y) {
+            const xn = (x - K.cx) / K.fx;
+            const yn = (y - K.cy) / K.fy;
+            const r2 = xn*xn + yn*yn;
+            const radial = 1 + K.k1 * r2 + K.k2 * r2 * r2;
+            const x_dist = xn * radial;
+            const y_dist = yn * radial;
+            // const u = x_dist * K.fx + K.cx;
+            const v = y_dist * K.fy + K.cy;
+            return v;
+        }
+
+        function precompute() {
+            console.log("Precomputing distortion map...");
+            for(let v = 0; v < H; v++) {
+                let min_v = Infinity;
+                let max_v = -Infinity;
+                
+                // Sample points across the row to find min/max source rows needed
+                for(let u = 0; u < W; u += 20) { // Step 20 for speed
+                    const src_v = undistortPixel(u, v);
+                    if(src_v < min_v) min_v = src_v;
+                    if(src_v > max_v) max_v = src_v;
+                }
+                
+                rowRequirements.push({
+                    min: Math.floor(min_v),
+                    max: Math.ceil(max_v)
+                });
+            }
+            console.log("Precomputation done.");
+        }
+
+        precompute();
+
+        // --- Simulation State ---
+        let sim = {
+            running: false,
+            timer: null,
+            outRow: 0,
+            
+            // Traditional State
+            trad: {
+                inRow: 0,
+                buffer: [], // List of row indices currently in buffer
+                maxUsage: 0
+            },
+
+            // Dynamic State
+            dyn: {
+                inRow: 0,
+                buffer: [], // List of row indices currently in buffer
+                maxUsage: 0
+            }
+        };
+
+        // --- Canvas Setup ---
+        const ctxTrad = document.getElementById('canvas-trad').getContext('2d');
+        const ctxDyn = document.getElementById('canvas-dyn').getContext('2d');
+
+        // Visual scaling: Map 0-1080 rows to canvas height
+        // But we want to show the BUFFER relative to the current processing.
+        // Let's visualize the entire image height as a vertical bar, and highlight the buffered region.
+        
+        function drawViz(ctx, state, reqMin, reqMax, label) {
+            const w = ctx.canvas.width;
+            const h = ctx.canvas.height;
+            
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Image Background (dim)
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, w, h);
+
+            // Draw Current Output Line Indicator (Green Line)
+            const outY = (sim.outRow / H) * h;
+            ctx.strokeStyle = '#0aff00';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, outY);
+            ctx.lineTo(w, outY);
+            ctx.stroke();
+            ctx.fillStyle = '#0aff00';
+            ctx.fillText(`OUT: ${sim.outRow}`, 5, outY - 2);
+
+            // Draw Buffered Region
+            if (state.buffer.length > 0) {
+                const bufMin = Math.min(...state.buffer);
+                const bufMax = Math.max(...state.buffer);
+                
+                const y1 = (bufMin / H) * h;
+                const y2 = (bufMax / H) * h;
+                const h_bar = Math.max(1, y2 - y1);
+
+                ctx.fillStyle = 'rgba(0, 243, 255, 0.3)';
+                ctx.fillRect(40, y1, w - 80, h_bar);
+                ctx.strokeStyle = '#00f3ff';
+                ctx.strokeRect(40, y1, w - 80, h_bar);
+
+                // Label Buffer Size
+                ctx.fillStyle = '#00f3ff';
+                ctx.fillText(`${state.buffer.length} lines`, w - 70, y1 + h_bar/2 + 3);
+            }
+
+            // Draw Read Requirement (Red Zone)
+            if (reqMin !== undefined) {
+                const r1 = (reqMin / H) * h;
+                const r2 = (reqMax / H) * h;
+                const rh = Math.max(2, r2 - r1);
+                
+                ctx.fillStyle = 'rgba(255, 0, 60, 0.8)';
+                ctx.fillRect(45, r1, w - 90, rh);
+            }
+        }
+
+        function update() {
+            if (!sim.running) return;
+
+            const speedVal = parseInt(document.getElementById('speed-range').value);
+            let steps = 1;
+            let delay = 20;
+
+            // Speed scaling logic
+            if (speedVal <= 50) {
+                // 1..50 -> Delay 100ms .. 2ms
+                delay = (51 - speedVal) * 2;
+                steps = 1;
+            } else {
+                // 51..100 -> Delay 0, Steps 1..50
+                delay = 0;
+                steps = speedVal - 49; 
+            }
+
+            for (let i = 0; i < steps; i++) {
+                if (sim.outRow >= H) {
+                    sim.running = false;
+                    document.getElementById('btn-run').innerText = "RESTART";
+                    break;
+                }
+
+                const req = rowRequirements[sim.outRow];
+                
+                // --- Traditional Logic ---
+                const tradLookahead = 128;
+                const tradLookback = 128;
+                const tradTargetIn = Math.min(H - 1, sim.outRow + tradLookahead);
+                
+                while (sim.trad.inRow <= tradTargetIn) {
+                    sim.trad.buffer.push(sim.trad.inRow);
+                    sim.trad.inRow++;
+                }
+                const tradMinKeep = Math.max(0, sim.outRow - tradLookback);
+                sim.trad.buffer = sim.trad.buffer.filter(r => r >= tradMinKeep);
+                sim.trad.maxUsage = Math.max(sim.trad.maxUsage, sim.trad.buffer.length);
+
+                // --- Dynamic Logic ---
+                const dynTargetIn = Math.min(H - 1, req.max);
+                while (sim.dyn.inRow <= dynTargetIn) {
+                    sim.dyn.buffer.push(sim.dyn.inRow);
+                    sim.dyn.inRow++;
+                }
+                // Safety margin: Keep 2 extra lines (simulating hardware pipeline latency)
+                sim.dyn.buffer = sim.dyn.buffer.filter(r => r >= req.min - 2);
+                sim.dyn.maxUsage = Math.max(sim.dyn.maxUsage, sim.dyn.buffer.length);
+
+                // Advance
+                sim.outRow++;
+            }
+
+            // --- Render & Stats (Once per frame) ---
+            const vizRow = Math.max(0, sim.outRow - 1);
+            const req = rowRequirements[vizRow];
+
+            drawViz(ctxTrad, sim.trad, req.min, req.max, "Traditional");
+            drawViz(ctxDyn, sim.dyn, req.min, req.max, "Dynamic");
+
+            document.getElementById('stat-trad-usage').innerText = sim.trad.buffer.length;
+            document.getElementById('stat-trad-max').innerText = sim.trad.maxUsage;
+            document.getElementById('stat-trad-in').innerText = sim.trad.inRow;
+            document.getElementById('stat-trad-out').innerText = sim.outRow;
+
+            document.getElementById('stat-dyn-usage').innerText = sim.dyn.buffer.length;
+            document.getElementById('stat-dyn-max').innerText = sim.dyn.maxUsage;
+            document.getElementById('stat-dyn-in').innerText = sim.dyn.inRow;
+            document.getElementById('stat-dyn-out').innerText = sim.outRow;
+
+            if (sim.running) {
+                sim.timer = setTimeout(update, delay);
+            }
+        }
+
+        function toggleSim() {
+            if (sim.outRow >= H) resetSim();
+            
+            sim.running = !sim.running;
+            document.getElementById('btn-run').innerText = sim.running ? "PAUSE" : "RESUME";
+            if (sim.running) update();
+            else clearTimeout(sim.timer);
+        }
+
+        function resetSim() {
+            sim.running = false;
+            clearTimeout(sim.timer);
+            sim.outRow = 0;
+            
+            sim.trad = { inRow: 0, buffer: [], maxUsage: 0 };
+            sim.dyn = { inRow: 0, buffer: [], maxUsage: 0 };
+            
+            document.getElementById('btn-run').innerText = "RUN SIMULATION";
+            
+            // Initial Draw
+            drawViz(ctxTrad, sim.trad, undefined, undefined);
+            drawViz(ctxDyn, sim.dyn, undefined, undefined);
+            
+            // Reset Stats
+            ['trad', 'dyn'].forEach(type => {
+                document.getElementById(`stat-${type}-usage`).innerText = 0;
+                document.getElementById(`stat-${type}-max`).innerText = 0;
+                document.getElementById(`stat-${type}-in`).innerText = 0;
+                document.getElementById(`stat-${type}-out`).innerText = 0;
+            });
+        }
+
+        // Initial Draw
+        resetSim();
+
+    </script>
+</body>
+</html>

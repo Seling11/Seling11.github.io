@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPGA Image Undistortion Engine | Hardware Emulation</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --panel-bg: rgba(20, 20, 20, 0.7);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-cyan: #00f3ff;
+            --accent-green: #0aff00;
+            --accent-red: #ff003c;
+            --accent-yellow: #f7ff00;
+            --text-main: #e0e0e0;
+            --text-dim: #888;
+            --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 0%, #1a2a3a 0%, transparent 60%),
+                linear-gradient(0deg, rgba(0,0,0,0.2) 0%, transparent 1px);
+            background-size: 100% 100%, 100% 4px;
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header & Controls */
+        .page-header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            margin: 0;
+            font-size: 1.8rem;
+            background: linear-gradient(to right, #fff, var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .config-panel {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            font-size: 0.85rem;
+            background: rgba(20,20,20,0.8);
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        select, input[type="text"], input[type="number"] {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            color: var(--accent-green);
+            padding: 8px 12px;
+            font-family: var(--font-mono);
+            outline: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+        }
+
+        button {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            transition: all 0.3s var(--ease-bounce);
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        button:active {
+            transform: translateY(1px) scale(0.95);
+        }
+
+        button.active {
+            background: var(--accent-cyan);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+        }
+
+        /* Main Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 25px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .images-row {
+            display: flex;
+            gap: 25px;
+        }
+
+        .images-row .panel {
+            flex: 1;
+        }
+
+        .bram-row {
+            height: 200px;
+            flex-shrink: 0;
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s var(--ease-bounce), box-shadow 0.3s ease;
+        }
+        
+        .panel:hover {
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+        }
+
+        .panel-header {
+            background: rgba(0,0,0,0.6);
+            padding: 12px 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .panel-content {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: radial-gradient(#222 1px, transparent 1px);
+            background-size: 20px 20px;
+            padding: 15px;
+        }
+
+        /* Canvas Styling */
+        canvas {
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            image-rendering: pixelated;
+            border-radius: 4px;
+        }
+
+        /* Overlays */
+        .overlay-info {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--accent-green);
+            background: rgba(0,0,0,0.8);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(4px);
+        }
+
+        /* Middle Section (BRAM & Logic) */
+        .logic-column {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            height: 100%;
+        }
+
+        .signal-view {
+            height: 100%;
+            padding: 20px;
+            font-size: 0.85rem;
+            font-family: var(--font-mono);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Signal Indicators */
+        .signal-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 5px;
+            align-items: center;
+        }
+
+        .bit-val {
+            color: var(--accent-yellow);
+            font-weight: bold;
+        }
+        .bit-val.high { color: var(--accent-red); text-shadow: 0 0 8px var(--accent-red); }
+        .bit-val.low { color: var(--text-dim); }
+
+        /* Discard List Input Area */
+        .discard-input-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            background: rgba(10,10,10,0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            backdrop-filter: blur(20px);
+        }
+        
+        .discard-input-container.show { display: block; animation: popIn 0.3s var(--ease-bounce); }
+        
+        @keyframes popIn {
+            from { transform: translateX(-50%) scale(0.9); opacity: 0; }
+            to { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(0,0,0,0.5);
+            color: var(--accent-green);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            resize: none;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-cyan);
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+        
+        input[type="range"] {
+            width: 150px;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            padding: 0;
+            border: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-cyan);
+            transition: transform 0.2s var(--ease-bounce);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+        }
+
+        /* Home Button */
+        .home-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--accent-cyan);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: all 0.3s var(--ease-bounce);
+            z-index: 1000;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .home-btn:hover {
+            background: var(--accent-cyan);
+            color: #000;
+            transform: scale(1.1) rotate(-10deg);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <h1>FPGA Stream Undistortion <span style="font-size:0.5em; color:#666;">v1.0</span></h1>
+    </div>
+    
+    <div class="controls-bar">
+        <div class="config-panel">
+            <label>Resolution:</label>
+            <select id="resSelect" onchange="onResolutionChange()">
+                <option value="1280x720">1280 x 720 (HD)</option>
+                <option value="1920x1080">1920 x 1080 (FHD)</option>
+            </select>
+
+            <div style="width: 1px; height: 20px; background: #333; margin: 0 10px;"></div>
+
+            <label>Image:</label>
+            <select id="imgSelect" onchange="onImageChange()" style="width: 150px;">
+                <optgroup label="720p Images">
+                    <option value="captured_images/captured_20251013_201531.jpg">720p - Img 1</option>
+                    <option value="captured_images/captured_20251013_201459.jpg">720p - Img 2</option>
+                    <option value="captured_images/captured_20251013_201636.jpg">720p - Img 3</option>
+                </optgroup>
+                <optgroup label="1080p Images">
+                    <option value="captured_images2/1080_captured_20251107_035053.jpg">1080p - Img 1</option>
+                    <option value="captured_images2/1080_captured_20251107_035057.jpg">1080p - Img 2</option>
+                    <option value="captured_images2/1080_captured_20251107_035059.jpg">1080p - Img 3</option>
+                </optgroup>
+                <option value="local">Local...</option>
+            </select>
+            <input type="file" id="fileInput" style="display:none" accept="image/*" onchange="onFileSelected()">
+
+            <div style="width: 1px; height: 20px; background: #333; margin: 0 10px;"></div>
+
+            <label>BRAM Lines:</label>
+            <input type="number" id="bramSizeInput" value="50" min="2" max="100" style="width: 50px;" onchange="resetSim()">
+
+            <label>Start Row:</label>
+            <input type="number" id="startRowInput" value="30" min="0" max="500" style="width: 50px;" onchange="resetSim()">
+            
+            <div style="width: 1px; height: 20px; background: #333; margin: 0 10px;"></div>
+
+            <button onclick="toggleDiscardEditor()">Edit Discard List</button>
+            <button onclick="toggleParamsEditor()">Params</button>
+            
+            <div style="width: 1px; height: 20px; background: #333; margin: 0 10px;"></div>
+
+            <label>Speed:</label>
+            <input type="range" id="speedRange" min="1" max="50" value="10">
+            
+            <button id="btnRun" onclick="toggleRun()" class="active">RUN</button>
+            <button onclick="resetSim()">RST</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- LEFT COLUMN: SIGNALS -->
+        <div class="logic-column">
+            <div class="panel signal-view">
+                <div class="panel-header" style="position: absolute; top: 0; left: 0; width: 100%;">AXI-Stream Signals</div>
+                <div style="margin-top: 20px;">
+                    <div class="signal-row"><span>clk</span> <span class="bit-val high">█</span></div>
+                    <div class="signal-row"><span>rst_n</span> <span class="bit-val high">1</span></div>
+                    <div class="signal-row"><span>tvalid</span> <span class="bit-val" id="sig-valid">0</span></div>
+                    <div class="signal-row"><span>tready</span> <span class="bit-val high">1</span></div>
+                    <div class="signal-row"><span>tuser</span> <span class="bit-val" id="sig-user">0</span></div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <div class="signal-row"><span>current_y</span> <span class="bit-val" id="sig-y">0</span></div>
+                    <div class="signal-row"><span>discard_bit</span> <span class="bit-val" id="sig-discard">0</span></div>
+                    <div class="signal-row"><span>wr_ptr</span> <span class="bit-val" id="sig-wr">0</span></div>
+                    <div class="signal-row"><span>rd_ptr</span> <span class="bit-val" id="sig-rd">0</span></div>
+                    <div class="signal-row"><span>state</span> <span class="bit-val" id="sig-state" style="color: var(--accent-cyan)">IDLE</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOP ROW: IMAGES -->
+            <div class="images-row">
+                <!-- INPUT (DDR) -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>DDR Memory (Input)</span>
+                        <span id="input-addr">ADDR: 0x0000</span>
+                    </div>
+                    <div class="panel-content" id="inputContainer">
+                        <div style="position: relative; width: 100%;">
+                            <canvas id="inputCanvas" style="display: block; width: 100%; height: auto;"></canvas>
+                            <!-- The sliding window overlay -->
+                            <div id="windowOverlay" style="position: absolute; border: 2px solid var(--accent-green); box-shadow: 0 0 10px var(--accent-green); pointer-events: none; display: none; z-index: 10;"></div>
+                        </div>
+                    </div>
+                    <div class="overlay-info">
+                        SRC_ROW: <span id="val-src-row">0</span>
+                    </div>
+                </div>
+
+                <!-- OUTPUT -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span>Video Output</span>
+                        <span id="fps-counter">0 FPS</span>
+                    </div>
+                    <div class="panel-content">
+                        <div style="position: relative; width: 100%;">
+                            <canvas id="outputCanvas" style="display: block; width: 100%; height: auto;"></canvas>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div class="overlay-info">
+                        OUT_ROW: <span id="val-out-row">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM ROW: BRAM -->
+            <div class="panel bram-view bram-row">
+                <div class="panel-header">
+                    <span>Line Buffer (BRAM)</span>
+                    <span>Size: <span id="bram-size-display">50</span> Lines</span>
+                </div>
+                <!-- Use object-fit: contain to preserve aspect ratio while fitting in the box -->
+                <canvas id="bramCanvas" style="width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; background: #000;"></canvas>
+                <div style="position: absolute; top: 80%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.1); font-size: 3rem; font-weight: bold; pointer-events: none;">
+                    FIFO
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discard List Editor Modal -->
+    <div class="discard-input-container" id="discardEditor">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span style="color: #fff;">Custom Discard List (0/1 sequence)</span>
+            <div>
+                <button onclick="generatePattern()">Auto-Gen</button>
+                <button onclick="applyDiscardList()">Apply</button>
+                <button onclick="toggleDiscardEditor()" style="border-color: #666; color: #666;">Close</button>
+            </div>
+        </div>
+        <textarea id="discardInput"></textarea>
+    </div>
+
+    <!-- Params Editor Modal -->
+    <div class="discard-input-container" id="paramsEditor" style="width: 400px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="color: #fff;">Camera Parameters</span>
+            <button onclick="toggleParamsEditor()" style="border-color: #666; color: #666;">Close</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: var(--accent-green); font-size: 0.8rem;">
+            <label>fx: <input type="number" id="p_fx" step="0.1" style="width: 80px;"></label>
+            <label>fy: <input type="number" id="p_fy" step="0.1" style="width: 80px;"></label>
+            <label>cx: <input type="number" id="p_cx" step="0.1" style="width: 80px;"></label>
+            <label>cy: <input type="number" id="p_cy" step="0.1" style="width: 80px;"></label>
+            <label>k1: <input type="number" id="p_k1" step="0.001" style="width: 80px;"></label>
+            <label>k2: <input type="number" id="p_k2" step="0.001" style="width: 80px;"></label>
+        </div>
+        <div style="margin-top: 15px; text-align: right;">
+            <button onclick="applyParams()">Apply & Reset</button>
+        </div>
+    </div>
+
+    <a href="index.html" class="home-btn" title="Back to Home">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    </a>
+
+    <script>
+        // --- Constants & Config ---
+        
+        const PRESETS = {
+            "1280x720": {
+                bramSize: 50,
+                startRow: 30,
+                discardList: null,
+                defaultImage: "captured_images/captured_20251013_201531.jpg",
+                camParams: {
+                    fx: 847.52053706,
+                    fy: 848.17834559,
+                    cx: 642.31288098,
+                    cy: 387.37743817,
+                    k1: -0.42846866,
+                    k2: 0.23253349
+                }
+            },
+            "1920x1080": {
+                bramSize: 75,
+                startRow: 56,
+                discardList: "001101110111011011101101110111011101101110111011101110111011101110111101110111011110111011110111011110111101111011110111101111011110111110111101111101111101111101111101111101111110111110111111011111110111111011111110111111101111111101111111101111111110111111111011111111110111111111110111111111111011111111111111011111111111111110111111111111111111011111111111111111111111101111111111111111111111111111111111011111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111101111011101110111101110111101110111011110111011101111011101110111101110111011110111011110111011101111011101110111101110111011110111011101110111101110111011110111011101111011101110111011110111011101111011101110111011110111011101110111101110111011101111011101110111011101111011101110111011110111011101110111011110111011101110111101110111011101111011101110111011101111011101110111101110111011101111011101110111101110111011101111011101110111101110111011101111011101110111101110111011101111011101110111101110111011101111011101110111101110111011",
+                defaultImage: "captured_images2/1080_captured_20251107_035053.jpg",
+                camParams: {
+                    fx: 873.30872028,
+                    fy: 871.01064717,
+                    cx: 977.28981121,
+                    cy: 540.80821708,
+                    k1: -0.321590211,
+                    k2: 0.110822433
+                }
+            }
+        };
+
+        let camParams = {
+            fx: 847.52053706,
+            fy: 848.17834559,
+            cx: 642.31288098,
+            cy: 387.37743817,
+            k1: -0.42846866,
+            k2: 0.23253349
+        };
+        
+        // --- State ---
+        let simState = {
+            running: false,
+            width: 1280,
+            height: 720,
+            currentRow: 0,
+            bramSize: 50,
+            bramStartRow: 30,
+            discardList: [],
+            timer: null,
+            sourceImage: null,
+            bramBuffer: [] // Stores actual pixel data (ImageData objects)
+        };
+
+        // --- DOM Elements ---
+        const els = {
+            inputCanvas: document.getElementById('inputCanvas'),
+            outputCanvas: document.getElementById('outputCanvas'),
+            bramCanvas: document.getElementById('bramCanvas'),
+            windowOverlay: document.getElementById('windowOverlay'),
+            resSelect: document.getElementById('resSelect'),
+            imgSelect: document.getElementById('imgSelect'),
+            fileInput: document.getElementById('fileInput'),
+            bramSizeInput: document.getElementById('bramSizeInput'),
+            startRowInput: document.getElementById('startRowInput'),
+            discardInput: document.getElementById('discardInput'),
+            progressBar: document.getElementById('progressBar'),
+            // Signals
+            sigY: document.getElementById('sig-y'),
+            sigDiscard: document.getElementById('sig-discard'),
+            sigState: document.getElementById('sig-state'),
+            sigValid: document.getElementById('sig-valid'),
+            valOutRow: document.getElementById('val-out-row'),
+            valSrcRow: document.getElementById('val-src-row')
+        };
+
+        const ctxs = {
+            input: els.inputCanvas.getContext('2d', { willReadFrequently: true }),
+            output: els.outputCanvas.getContext('2d'),
+            bram: els.bramCanvas.getContext('2d')
+        };
+
+        // --- Initialization ---
+        
+        // Initial load
+        loadImage(els.imgSelect.value);
+
+        function loadImage(src) {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                simState.sourceImage = img;
+                // Initialize params UI only once or always? 
+                // Params are independent of image, so maybe just ensure they are set.
+                // But we need to make sure UI matches internal state.
+                // Let's just call it.
+                initParamsUI(); 
+                resetSim();
+            };
+            img.onerror = () => {
+                alert("Failed to load image. Please ensure the file exists.");
+            };
+        }
+
+        function onImageChange() {
+            const val = els.imgSelect.value;
+            if (val === 'local') {
+                els.fileInput.click();
+            } else {
+                loadImage(val);
+            }
+        }
+
+        function onFileSelected() {
+            const file = els.fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    loadImage(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function initParamsUI() {
+            document.getElementById('p_fx').value = camParams.fx;
+            document.getElementById('p_fy').value = camParams.fy;
+            document.getElementById('p_cx').value = camParams.cx;
+            document.getElementById('p_cy').value = camParams.cy;
+            document.getElementById('p_k1').value = camParams.k1;
+            document.getElementById('p_k2').value = camParams.k2;
+        }
+
+        function undistortPixel(x, y, fx, fy, cx, cy, k1, k2) {
+            const xn = (x - cx) / fx;
+            const yn = (y - cy) / fy;
+            const r2 = xn*xn + yn*yn;
+            const radial = 1 + k1 * r2 + k2 * r2 * r2;
+            const x_dist = xn * radial;
+            const y_dist = yn * radial;
+            const u = x_dist * fx + cx;
+            const v = y_dist * fy + cy;
+            return [u, v];
+        }
+
+        function initDiscardList(height) {
+            // Default pattern: 1,1,0,1,1,1,0... simulating lens distortion correction speed
+            let list = [];
+            for(let i=0; i<height; i++) {
+                // A simple pattern that varies
+                if (i % 5 === 0 || i % 13 === 0) list.push(0);
+                else list.push(1);
+            }
+            return list;
+        }
+
+        function onResolutionChange() {
+            const res = els.resSelect.value;
+            if (PRESETS[res]) {
+                const p = PRESETS[res];
+                els.bramSizeInput.value = p.bramSize;
+                els.startRowInput.value = p.startRow;
+                if (p.discardList) {
+                    simState.discardList = p.discardList.split('').map(Number);
+                    els.discardInput.value = p.discardList;
+                } else {
+                    simState.discardList = [];
+                }
+                
+                if (p.camParams) {
+                    camParams = { ...p.camParams };
+                    initParamsUI();
+                }
+
+                if (p.defaultImage) {
+                    els.imgSelect.value = p.defaultImage;
+                    loadImage(p.defaultImage);
+                }
+            }
+            resetSim();
+        }
+
+        function resetSim() {
+            stopSim();
+            
+            // 1. Resolution Setup
+            const res = els.resSelect.value.split('x');
+            simState.width = parseInt(res[0]);
+            simState.height = parseInt(res[1]);
+            
+            // 2. Canvas Sizing (Visual scaling handled by CSS, logical size here)
+            // We scale down the visual canvas to fit the panel, but keep logical resolution high
+            // For performance in browser, we might scale down the processing resolution slightly if 1080p is too heavy for JS
+            // But let's try 1:1 first.
+            
+            // To make it fit in the UI, we set CSS width/height to 100% of container
+            // and set attribute width/height to actual resolution.
+            [els.inputCanvas, els.outputCanvas].forEach(c => {
+                c.width = simState.width;
+                c.height = simState.height;
+                // Style is now handled by the wrapper and inline styles in HTML
+            });
+
+            // Update Config from Inputs
+            simState.bramSize = parseInt(els.bramSizeInput.value) || 20;
+            let startRow = parseInt(els.startRowInput.value) || 30;
+            
+            // BRAM Canvas is special, it shows N lines.
+            // To avoid stretching, we set the canvas height to exactly N lines * scale factor
+            // But for visualization in the wide panel, we want to fill the width.
+            // The user asked for "original proportion" and "no vertical stretching".
+            // Since BRAM is only ~20 lines high but 1920 wide, it is extremely thin.
+            // To make it visible without stretching, we must zoom it in uniformly or just show it as a thin strip.
+            // However, usually "no stretching" means aspect ratio preservation.
+            // Let's try to keep aspect ratio but zoom in to fit the panel height?
+            // Or just draw it pixel-perfectly?
+            // If we draw 20 lines on a 150px high panel, it will be tiny unless we zoom.
+            // Let's zoom vertically and horizontally by the same amount to preserve aspect ratio?
+            // No, the user said "don't stretch vertically".
+            // If I interpret "don't stretch vertically" as "don't distort the aspect ratio", then I should scale uniformly.
+            
+            // Let's set the internal resolution to match the BRAM size exactly.
+            els.bramCanvas.width = simState.width;
+            els.bramCanvas.height = simState.bramSize; 
+            
+            // And use CSS to fit it into the container while preserving aspect ratio?
+            // The container is wide (e.g. 1000px) and 150px high.
+            // The image is 1920x20. Aspect ratio ~100:1.
+            // If we fit to width, height will be ~10px. Too small.
+            // If we fit to height (150px), width will be ~15000px. Too wide.
+            
+            // Maybe the user means "don't stretch it to fill the height of the container if it distorts the image".
+            // But 20 lines is too small to see.
+            // I will scale it up by an integer factor (e.g. 4x or 5x) so it's visible but pixels are square.
+            
+            const ZOOM = 4;
+            els.bramCanvas.width = simState.width;
+            els.bramCanvas.height = simState.bramSize;
+            
+            // We use CSS transform to scale it up for display, or just let it be small but pixelated?
+            // Let's try setting the canvas size to (Width, Size) and use CSS to make it fill width, 
+            // but keep height auto? No, the panel is fixed height.
+            
+            // Let's try this: Draw it 1:1 on canvas, but use CSS to scale it up uniformly.
+            els.bramCanvas.style.width = '100%';
+            els.bramCanvas.style.height = 'auto';
+            els.bramCanvas.style.imageRendering = 'pixelated';
+            
+            // Wait, if I set style.height='auto', it will maintain aspect ratio based on width.
+            // 1920 width -> 100% container width.
+            // 20 height -> proportional height.
+            // If container is 1000px wide, image is effectively 1000x(1000/1920*20) ~= 10px high.
+            // This is too small.
+            
+            // The previous version was "magnify height for visibility" which caused vertical stretching.
+            // The user said "don't vertical stretch".
+            // Maybe they want to see the pixels as squares.
+            // If I want to fill the 150px height, I must show more lines or zoom in huge.
+            // But I only have 20 lines.
+            
+            // Let's interpret "don't vertical stretch" as "keep pixels square".
+            // So I will just render it with a fixed zoom level that fits nicely.
+            // Or, I will render it filling the width, and let the height be whatever it needs to be (likely small),
+            // and center it in the panel.
+            
+            // Actually, let's just set the canvas to the exact BRAM size.
+            // And use CSS to scale it up to fill the panel width? No that stretches height if we force height.
+            
+            // Let's try: Canvas resolution = (Width, BRAM_SIZE).
+            // CSS: width: 100%; height: 100%; object-fit: contain;
+            // This ensures it fits within the box without distortion (aspect ratio preserved).
+            // Since it's very wide and short, 'contain' will make it full width and very short height.
+            // This might be what "original proportion" implies.
+            
+            // BUT, 20 lines is hard to see.
+            // Maybe the user accepts "uniform scaling" (zooming).
+            // 'object-fit: contain' does exactly that.
+            
+            els.bramCanvas.width = simState.width;
+            els.bramCanvas.height = simState.bramSize;
+            els.bramCanvas.style.objectFit = 'contain'; // Key change
+            
+            // Update text
+            document.getElementById('bram-size-display').innerText = simState.bramSize;
+
+            // 3. Draw Input Image (Scaled to fit resolution)
+            if (simState.sourceImage) {
+                ctxs.input.drawImage(simState.sourceImage, 0, 0, simState.width, simState.height);
+            }
+
+            // 4. Reset State
+            simState.currentRow = 0;
+            simState.bramStartRow = startRow;
+            simState.bramBuffer = [];
+            
+            // Clear Output
+            ctxs.output.fillStyle = '#000';
+            ctxs.output.fillRect(0, 0, simState.width, simState.height);
+
+            // 5. Discard List
+            if (simState.discardList.length !== simState.height) {
+                simState.discardList = initDiscardList(simState.height);
+                els.discardInput.value = simState.discardList.join('');
+            }
+
+            updateUI();
+        }
+
+        // --- Simulation Logic ---
+
+        function step() {
+            if (simState.currentRow >= simState.height) {
+                stopSim();
+                els.sigState.innerText = "DONE";
+                els.sigState.style.color = "#0aff00";
+                return;
+            }
+
+            const y = simState.currentRow;
+            const discard = simState.discardList[y] || 0;
+
+            // 1. Simulate BRAM Window Update
+            // The window covers [bramStartRow, bramStartRow + BRAM_SIZE]
+            
+            // 2. "Process" the row (Draw to output)
+            // Perform actual undistortion mapping using BRAM content
+            
+            const bramY = simState.bramStartRow;
+            const bramH = simState.bramSize;
+            
+            // Fetch BRAM content from Input Canvas
+            // Optimization: Only fetch if we are inside the image.
+            const safeBramH = Math.min(bramH, simState.height - bramY);
+            let bramData = null;
+            if (safeBramH > 0 && bramY < simState.height) {
+                // Handle negative startRow if necessary, but input assumes startRow >= 0 usually.
+                // If startRow < 0, we just fetch from 0? No, logic assumes bramY is start index.
+                // Let's assume bramY >= 0 for simplicity or clamp.
+                const fetchY = Math.max(0, bramY);
+                const fetchH = Math.min(bramH - (fetchY - bramY), simState.height - fetchY);
+                if (fetchH > 0) {
+                    bramData = ctxs.input.getImageData(0, fetchY, simState.width, fetchH);
+                }
+            }
+
+            // Create output row buffer
+            const outputRowData = ctxs.output.createImageData(simState.width, 1);
+            const outBuf = outputRowData.data; // Uint8ClampedArray
+
+            // Pre-calculate params for speed
+            const { fx, fy, cx, cy, k1, k2 } = camParams;
+
+            for (let u = 0; u < simState.width; u++) {
+                // Calculate source coordinate
+                const [srcU, srcV] = undistortPixel(u, y, fx, fy, cx, cy, k1, k2);
+                
+                const u_int = Math.round(srcU);
+                const v_int = Math.round(srcV);
+                
+                let r=0, g=0, b=0;
+                
+                // Check if source is within image bounds
+                if (u_int >= 0 && u_int < simState.width && v_int >= 0 && v_int < simState.height) {
+                    // Check if source row (v_int) is within BRAM cache
+                    // Cache range: [bramY, bramY + bramH - 1]
+                    
+                    const cacheMin = bramY;
+                    const cacheMax = bramY + bramH - 1;
+                    let chosenRow = v_int;
+                    
+                    // Boundary clamping logic (Hardware behavior simulation)
+                    if (v_int < cacheMin) chosenRow = cacheMin;
+                    else if (v_int > cacheMax) chosenRow = cacheMax;
+                    
+                    // Map chosenRow to index in bramData
+                    // bramData starts at fetchY (which is usually bramY)
+                    // If bramY < 0, fetchY=0.
+                    const fetchY = Math.max(0, bramY);
+                    const localY = chosenRow - fetchY;
+                    
+                    if (bramData && localY >= 0 && localY < bramData.height) {
+                        const idx = (localY * simState.width + u_int) * 4;
+                        r = bramData.data[idx];
+                        g = bramData.data[idx+1];
+                        b = bramData.data[idx+2];
+                    }
+                }
+                
+                const outIdx = u * 4;
+                outBuf[outIdx] = r;
+                outBuf[outIdx+1] = g;
+                outBuf[outIdx+2] = b;
+                outBuf[outIdx+3] = 255; // Alpha
+            }
+
+            ctxs.output.putImageData(outputRowData, 0, y);
+
+            // 3. Update BRAM Visualization
+            // We want to show the content of the BRAM.
+            // We grab the block of rows from Input.
+            if (safeBramH > 0 && bramY < simState.height) {
+                const fetchY = Math.max(0, bramY);
+                const fetchH = Math.min(bramH - (fetchY - bramY), simState.height - fetchY);
+                
+                if (fetchH > 0) {
+                    ctxs.bram.imageSmoothingEnabled = false;
+                    ctxs.bram.drawImage(
+                        els.inputCanvas, 
+                        0, fetchY, simState.width, fetchH, // Source
+                        0, 0, simState.width, fetchH // Dest
+                    );
+                    
+                    // Clear rest
+                    if (fetchH < simState.bramSize) {
+                        ctxs.bram.fillStyle = '#000';
+                        ctxs.bram.fillRect(0, fetchH, simState.width, simState.bramSize - fetchH);
+                    }
+                }
+            }
+
+            // 4. Update Overlay on Input (The Green Box)
+            updateOverlay();
+
+            // 5. Update Signals
+            els.sigY.innerText = "0x" + y.toString(16).toUpperCase().padStart(3, '0');
+            els.sigDiscard.innerText = discard;
+            els.sigDiscard.className = discard ? "bit-val high" : "bit-val low";
+            els.sigValid.innerText = "1";
+            els.sigValid.className = "bit-val high";
+            els.valOutRow.innerText = y;
+            els.valSrcRow.innerText = simState.bramStartRow;
+            
+            els.progressBar.style.width = ((y / simState.height) * 100) + "%";
+
+            // 6. Advance State
+            simState.currentRow++;
+            if (discard === 1) {
+                simState.bramStartRow++;
+            }
+        }
+
+        function updateOverlay() {
+            // Calculate position of BRAM window on Input Canvas
+            // Use percentage to be resolution independent and container independent
+            
+            const topPct = (simState.bramStartRow / simState.height) * 100;
+            const heightPct = (simState.bramSize / simState.height) * 100;
+            
+            els.windowOverlay.style.display = 'block';
+            els.windowOverlay.style.top = topPct + '%';
+            els.windowOverlay.style.left = '0px';
+            els.windowOverlay.style.width = '100%';
+            // Ensure at least a thin line is visible even if percentage is tiny
+            els.windowOverlay.style.height = `max(2px, ${heightPct}%)`; 
+        }
+
+        function updateUI() {
+            els.sigState.innerText = simState.running ? "RUNNING" : "IDLE";
+            els.sigState.style.color = simState.running ? "#00f3ff" : "#666";
+            document.getElementById('btnRun').innerText = simState.running ? "PAUSE" : "RUN";
+            document.getElementById('btnRun').className = simState.running ? "" : "active";
+        }
+
+        // --- Controls ---
+
+        function toggleRun() {
+            if (simState.running) {
+                stopSim();
+            } else {
+                startSim();
+            }
+        }
+
+        function startSim() {
+            if (simState.currentRow >= simState.height) resetSim();
+            simState.running = true;
+            updateUI();
+            
+            const speedVal = document.getElementById('speedRange').value;
+            const interval = 50 - speedVal + 1; // 1 to 50ms
+            
+            simState.timer = setInterval(step, interval);
+        }
+
+        function stopSim() {
+            simState.running = false;
+            clearInterval(simState.timer);
+            updateUI();
+            els.sigValid.innerText = "0";
+            els.sigValid.className = "bit-val low";
+        }
+
+        // --- Discard Editor ---
+        function toggleDiscardEditor() {
+            const el = document.getElementById('discardEditor');
+            el.classList.toggle('show');
+        }
+
+        function generatePattern() {
+            const list = initDiscardList(simState.height);
+            els.discardInput.value = list.join('');
+        }
+
+        function applyDiscardList() {
+            const str = els.discardInput.value.trim();
+            // Validate
+            if (!/^[01]+$/.test(str)) {
+                alert("Invalid format. Only 0 and 1 allowed.");
+                return;
+            }
+            // Pad or truncate
+            let list = str.split('').map(Number);
+            if (list.length < simState.height) {
+                // Pad with 1s
+                while(list.length < simState.height) list.push(1);
+            } else {
+                list = list.slice(0, simState.height);
+            }
+            
+            simState.discardList = list;
+            toggleDiscardEditor();
+            resetSim(); // Restart with new list
+        }
+
+        // --- Params Editor ---
+        function toggleParamsEditor() {
+            const el = document.getElementById('paramsEditor');
+            el.classList.toggle('show');
+        }
+
+        function applyParams() {
+            camParams.fx = parseFloat(document.getElementById('p_fx').value);
+            camParams.fy = parseFloat(document.getElementById('p_fy').value);
+            camParams.cx = parseFloat(document.getElementById('p_cx').value);
+            camParams.cy = parseFloat(document.getElementById('p_cy').value);
+            camParams.k1 = parseFloat(document.getElementById('p_k1').value);
+            camParams.k2 = parseFloat(document.getElementById('p_k2').value);
+            
+            toggleParamsEditor();
+            resetSim();
+        }
+
+        // Handle window resize for overlay
+        window.addEventListener('resize', () => {
+            if(!simState.running) updateOverlay();
+        });
+
+    </script>
+</body>
+</html>

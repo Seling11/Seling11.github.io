@@ -91,6 +91,34 @@
       .container{ flex-direction:column; gap:24px;}
       textarea{height:520px;}
     }
+
+    /* Home Button */
+    .home-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #1976d2;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #1976d2;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 1000;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .home-btn:hover {
+      background: #1976d2;
+      color: #fff;
+      transform: scale(1.1) rotate(-10deg);
+      box-shadow: 0 8px 20px rgba(25, 118, 210, 0.4);
+    }
   </style>
 </head>
 <body>
@@ -117,6 +145,11 @@
       <div id="machineError" class="error"></div>
     </div>
   </div>
+
+  <a href="addl_cpu_group1.html" class="home-btn" title="Back to Home">
+    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  </a>
+
   <script>
     // 指令定义
     // const instrMap = {

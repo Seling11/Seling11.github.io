@@ -347,7 +347,7 @@
         return `MOV R${rd}, R${rs}`;
       }
       // CMP Rs, Rt（特殊处理：Rd字段全0）
-      if (op === "CMP" && rd === 0) {
+      if (op === "CMP") {
         return `CMP R${rs}, R${rt}`;
       }
 

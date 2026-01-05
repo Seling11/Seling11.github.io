@@ -85,7 +85,7 @@
                 <select id="chapter-selector" onchange="setChapter(this.value)" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-1.5 w-48 truncate">
                     <!-- Options populated by JS -->
                 </select>
-                <select id="card-selector" onchange="jumpToCard(this.value)" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-1.5 w-44 truncate">
+                <select id="card-selector" onchange="jumpToCard(this.value)" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-1.5 w-64 truncate">
                     <!-- Options populated by JS -->
                 </select>
             </div>
@@ -365,7 +365,7 @@
             selectorEl.innerHTML = cards
                 .map((c, i) => {
                     const prefix = c._qn != null ? `${c._qn}. ` : `${i + 1}. `;
-                    const label = `${prefix}${c.q.replace(/^\s*\d+\./, '').trim().substring(0, 12)}...`;
+                    const label = `${prefix}${c.q.replace(/^\s*\d+\./, '').trim()}`;
                     return `<option value="${i}">${label}</option>`;
                 })
                 .join('');

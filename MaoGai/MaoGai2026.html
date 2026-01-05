@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>毛概2026背诵卡片</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .card-container {
+            position: relative;
+        }
+        /* Custom scrollbar for long content */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Table styles for content that was tabular in PDF */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #334155;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        tr:nth-child(even) {
+            background-color: #fcfcfc;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm z-10 p-4 flex justify-between items-center shrink-0">
+        <h1 class="text-xl font-bold text-red-600 flex items-center gap-2">
+            <i class="fas fa-book-open"></i>
+            <span class="truncate">毛概2026背诵卡片</span>
+        </h1>
+        <div class="flex items-center gap-2">
+            <span id="progress-text" class="text-sm font-medium text-gray-500">1 / 38</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 relative flex flex-col justify-center items-center p-4 overflow-hidden w-full max-w-6xl mx-auto">
+        
+        <!-- Controls Top -->
+        <div class="w-full flex justify-between items-center mb-4 px-2 gap-3">
+            <div class="flex items-center gap-2">
+                <button onclick="shuffleCards()" class="text-gray-600 hover:text-red-600 transition-colors text-sm flex items-center gap-1 bg-white px-3 py-1 rounded shadow-sm border border-gray-200">
+                    <i class="fas fa-random"></i> 乱序背诵
+                </button>
+                <button onclick="resetOrder()" class="text-gray-600 hover:text-red-600 transition-colors text-sm flex items-center gap-1 bg-white px-3 py-1 rounded shadow-sm border border-gray-200">
+                    <i class="fas fa-list"></i> 正序背诵
+                </button>
+            </div>
+            <div class="flex items-center gap-2">
+                <select id="chapter-selector" onchange="setChapter(this.value)" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-1.5 w-48 truncate">
+                    <!-- Options populated by JS -->
+                </select>
+                <select id="card-selector" onchange="jumpToCard(this.value)" class="bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block p-1.5 w-44 truncate">
+                    <!-- Options populated by JS -->
+                </select>
+            </div>
+        </div>
+
+        <!-- Card Area -->
+        <div class="card-container w-full h-[65vh] relative cursor-pointer group" onclick="toggleCard()">
+            <div id="flashcard" class="w-full h-full">
+                <div class="w-full h-full bg-white rounded-xl shadow-xl border border-gray-100 p-6 md:p-8 text-left hover:shadow-2xl hover:border-red-100 transition-all flex flex-col">
+                    <div class="relative shrink-0">
+                        <div class="absolute top-0 left-0 text-red-50 text-6xl md:text-8xl font-bold select-none -z-10">Q</div>
+                        <h2 id="card-question" class="text-xl md:text-2xl font-bold text-gray-800 leading-snug break-words max-w-full mt-2">
+                            <!-- Question Text -->
+                        </h2>
+                        <div class="mt-4 flex items-center gap-2 text-gray-400 text-xs md:text-sm font-medium">
+                            <span class="w-10 h-1 bg-red-500 rounded-full opacity-20"></span>
+                            <p>(点击显示/隐藏答案)</p>
+                        </div>
+                    </div>
+
+                    <div id="answer-wrapper" class="mt-5 pt-4 border-t border-gray-100 hidden flex flex-col flex-1 min-h-0">
+                        <div class="flex justify-between items-start mb-2 shrink-0">
+                            <div class="text-red-600 font-bold text-lg flex items-center gap-2">
+                                <i class="fas fa-lightbulb"></i> 答案
+                            </div>
+                            <span class="text-[10px] text-gray-400 bg-gray-50 px-2 py-1 rounded border border-gray-100">PDF原声</span>
+                        </div>
+                        <div id="card-answer" class="text-base text-gray-700 leading-relaxed overflow-y-auto custom-scroll whitespace-pre-wrap pr-2 text-justify flex-1 min-h-0">
+                            <!-- Answer Text -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="w-full flex justify-between items-center mt-6 gap-4">
+            <button onclick="prevCard(event)" class="flex-1 bg-white border border-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg shadow-sm hover:bg-gray-50 active:bg-gray-100 transition-all flex justify-center items-center gap-2 group outline-none focus:ring-2 focus:ring-gray-200">
+                <i class="fas fa-arrow-left group-hover:-translate-x-1 transition-transform text-gray-400 group-hover:text-gray-600"></i> 上一题
+            </button>
+            <button onclick="nextCard(event)" class="flex-1 bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-700 active:bg-red-800 transition-all flex justify-center items-center gap-2 group outline-none focus:ring-2 focus:ring-red-300">
+                下一题 <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Data extracted from the PDF
+        const rawData = [
+            {
+                q: "1.马克思主义中国化、时代化的历程P1",
+                a: `• 1921:中国共产党从成立之日,就明确把马克思列宁主义确立为指导思想\n• 1931:左倾错误,将马克思主义教条化\n• 1938:毛泽东在党的六届六中全会上作了《论新阶段》的报告,标志着“马克思主义的中国化”这一命题的正式提出。\n• 1945:刘少奇代表党中央在党的七大上作了《关于修改党章的报告》,对马克思主义中国化从理论上作了进一步的阐述,并指出毛泽东思想是“中国化的马克思主义”。\n• 2021:党的十九届六中全会通过的《中共中央关于党的百年奋斗重大成就和历史经验的决议》总结了百年来中国共产党推进马克思主义中国化时代化的重大成就,阐述了马克思主义中国化时代化的重大历史意义。\n• 2022:党的二十大明确把“不断谱写马克思主义中国化时代化新篇章”作为当代中国共产党人的历史责任,并提出了继续推进马克思主义中国化时代化的新要求。`
+            },
+            {
+                q: "2.马克思主义中国化、时代化的内涵P4",
+                a: `• 马克思主义中国化时代化,就是立足中国国情和时代特点,坚持把马克思主义基本原理同中国具体实际相结合、同中华优秀传统文化相结合,深入研究和解决中国革命、建设、改革不同历史时期的实际问题,真正搞懂面临的时代课题,不断吸收新的时代内容,科学回答时代提出的重大理论和实践课题,创造新的理论成果。\n\n• 三层意思\n\n1.运用马克思主义的立场、观点和方法,观察时代,把握时代、引领时代,解决中国革命、建设、改革中的实际问题。\n\n2.总结和提炼中国革命、建设、改革的实践经验并将其上升为理论,不断丰富和发展马克思主义的理论宝库,赋予马克思主义以新的哲学内涵。\n\n3.运用中国人民喜闻乐见的民族语言来阐述马克思主义,使其根植于中华优秀传统文化的土壤之中,具有中国特色、中国风格、中国气派。`
+            },
+            {
+                q: "3.怎么去坚持和发展马克思主义P6",
+                a: `• 两个结合\n\n1.同中国具体实际相结合\n\n2.同优秀传统文化相结合\n\n• 论述分析(两个坚持)\n\n1.坚持解放思想、实事求是、与时俱进、求真务实…………………\n\n2.坚定历史自信、文化自信,坚持古为今用、推陈出新…………………`
+            },
+            {
+                q: "4.马克思主义中国化时代化的历史进程p7",
+                a: `<table><thead><tr><th>主要思想(提出人)</th><th>时代之问</th><th>理论主体</th><th>确立为指导思想时间</th><th>历史意义</th></tr></thead><tbody><tr><td><strong>毛泽东思想</strong><br>(毛泽东)</td><td>/</td><td>农村包围城市、武装夺取政权;把马克思列宁主义基本原理同中国具体实际进行“第二次结合”(社会主义建设时期)</td><td>七大 '45</td><td>马克思主义中国化时代化的第一次历史性飞跃</td></tr><tr><td><strong>邓小平理论</strong><br>(邓小平)</td><td>什么是社会主义、怎样建设社会主义</td><td>把党和国家工作中心转移到经济建设上来、实行改革开放</td><td>十五大 '97</td><td>成功开创了中国特色社会主义</td></tr><tr><td><strong>“三个代表”重要思想</strong><br>(江泽民)</td><td>什么是社会主义、怎样建设社会主义;建设什么样的党,怎样建设党</td><td>社会主义市场经济、基本经济制度、分配制度</td><td>十六大 '02</td><td>成功把中国特色社会主义推向21世纪</td></tr><tr><td><strong>科学发展观</strong><br>(胡锦涛)</td><td>新形势下实现什么样的发展,怎样发展</td><td>全面协调可持续发展</td><td>十八大 '12</td><td>在新形势下坚持和发展了中国特色社会主义</td></tr><tr><td><strong>习近平中国特色社会主义思想</strong><br>(习近平)</td><td>新时代坚持和发展什么样的中国特色社会主义,怎样坚持和发展中国特色社会主义;建设什么样的社会主义现代化强国、怎样建设社会主义现代化强国;建设什么样的长期执政的马克思主义政党、怎样建设长期执政的马克思主义政党。</td><td>/</td><td>十九大 '17</td><td>实现了马克思主义中国化时代化新的飞跃</td></tr></tbody></table>`
+            },
+            {
+                q: "5.毛泽东思想的形成过程p16",
+                a: `• 萌芽:大革命时期,毛泽东在《中国社会各阶级的分析》《湖南农民运动考察报告》等著作中,明确指出无产阶级领导农民运动的极端重要性。\n\n• 初步形成:\n\n1.土地革命战争时期,八七会议确定实现土地革命和武装斗争起义的方针\n\n2.《中国的红色政权为什么能够存在?》《井冈山的斗争》《星星之火,可以燎原》《反对本本主义》等著作,毛泽东提出并深入阐述的农村包围城市、武装夺取政权的思想,对红军和农村革命根据地的建立、巩固和发展发挥着根本指导作用。\n\n• 成熟:\n\n1.遵义会议是具有伟大转折意义的重要会议,确立了毛泽东同志在党中央和红军的领导地位。\n\n2.在《实践论》《矛盾论》中,运用马克思主义的认识论和辩证法,系统分析了党内左的和右的错误的思想根源。\n\n3. 《<共产党人>发刊词》《中国革命和中国共产党》《新民主主义论》《改造我们的学习》《论联合政府》等,不仅指明了新民主主义革命的具体目标,还为新民主主义革命的胜利找到了正确的方法。标志着毛泽东思想得到多方面展开而趋于成熟。\n\n4.党的六届七中全会通过的《关于若干历史问题的决议》充分肯定了确立毛泽东在全党领导地位的重大意义。\n\n• 确立:1945年党的七大通过的《中国共产党党章》明确规定,“中国共产党,以马克思列宁主义的理论与中国革命的实践之统一的思想—————毛泽东思想,作为自己一切工作的指针”。这标志着把毛泽东思想确立为党必须长期坚持的指导思想。\n\n• 继续发展:《在中国共产党第七届中央委员会第二次全体会议上的报告》《论人民民主专政》《论十大关系》《关于正确处理人民内部矛盾的问题》,形成了人民民主专政理论、社会主义改造理论、关于严格区分和正确处理两类矛盾的学说特别是正确处理人民内部矛盾、适合我国国情的中国工业化道路理论等。`
+            },
+            {
+                q: "6.毛泽东思想活的灵魂p27",
+                a: `• 简记:是群主\n\n<table><thead><tr><th>内容</th><th>具体内涵</th><th>重要意义</th><th>如何坚持</th></tr></thead><tbody><tr><td><strong>实事求是</strong><br>P27</td><td>一切从实际出发,理论联系实际,在实践中检验和发展真理</td><td>毛泽东思想的基本点,是毛泽东思想的精髓,是中国共产党的思想路线。</td><td>1.深入实际了解事物本来面貌,把握事物内在必然联系,按照客观规律办事<br>2.清醒认识和正确把握我国基本国情<br>3.不断推进实践基础上的理论创新</td></tr><tr><td><strong>群众路线</strong><br>P29</td><td>一切为了群众,一切依靠群众,从群众中来,到群众中去,把党的正确主张变为群众的自觉行动</td><td>群众路线本质上体现的是马克思主义关于人民群众是历史的创造者这一基本原理,是党的生命线和根本工作路线</td><td>1.坚持群众路线,就要坚持人民是推动历史发展的根本力量。<br>2.坚持群众路线,就是要坚持全心全意为人民服务的根本宗旨。<br>3.坚持群众路线,就要保持党同人民群众的血肉联系。</td></tr><tr><td><strong>独立自主</strong><br>P30</td><td>坚持独立思考,走自己的路,坚定不移地维护民族独立、捍卫国家主权,把立足点放在依靠自己力量的基础上,同时积极争取外援</td><td>独立自主是中华民族精神之魂。中华民族的优良传统,是中国共产党、中华人民共和国立党立国的重要原则,是我们党从中国实际出发、依靠党和人民力量进行革命、建设、改革的必然结论</td><td>1.坚持中国的事情必须由中国人民自己作主张、自己来处理。<br>2.坚持独立自主的和平外交政策,坚定不移地走和平发展道路,开展国际经济文化交流,学习外国一切对我们有益的先进事物</td></tr></tbody></table>`
+            },
+            {
+                q: "7.毛泽东思想的历史地位",
+                a: `• 继承性:马克思主义中国化时代化的第一个重大理论成果\n\n• 实践维度:中国革命和建设的科学指南\n\n• 精神维度:中国共产党和中国人民宝贵的精神财富`
+            },
+            {
+                q: "8.近代中国国情",
+                a: `<table><thead><tr><th>社会形态</th><th>主要矛盾</th><th>根本任务/最主要矛盾</th></tr></thead><tbody><tr><td>半殖民地半封建社会</td><td>帝国主义和中华民族的矛盾<br><br>封建主义和人民大众的矛盾</td><td><strong>帝国主义和中华民族的矛盾</strong><br><br>推翻帝国主义、封建主义和官僚资本主义(三座大山)的统治,<br>• 从根本上推翻反动腐朽的政治上层建筑,变革阻碍生产力发展的生产关系,<br>• 为建设富强民主的国家、确立人民当家作主的政治制度、改善人民生活扫清障碍,创造必要的前提。</td></tr></tbody></table>`
+            },
+            {
+                q: "9.新民主主义革命的总路线p45",
+                a: `• 1939年的《中国革命和中国共产党》第一次提出”新民主主义的革命“的科学概念,1948年《在晋绥干部会议上的讲话》完整总结概括新民主主义革命总路线:无产阶级领导的,人民大众的,反对帝国主义、封建主义和官僚资本主义的革命。\n\n• 革命对象:帝国主义(首要对象)、封建主义、官僚资本主义。\n\n• 革命动力:无产阶级、农民阶级、城市小资产阶级和民族资产阶级。无产阶级是中国革命最基本的动力,农民阶级是中国革命的主力军。城市小资产阶级是无产阶级的可靠同盟者,民族资产阶级也是中国革命的动力之一。\n\n• 领导力量:无产阶级的领导权中国革命的中心问题,也是新民主主义革命的核心问题。革命的领导权掌握在无产阶级手中(区别新旧民主主义革命的根本标志)。\n\n• 性质:资产阶级民主主义革命。\n\n• 新民主主义革命与社会主义革命是互相联系、紧密衔接的,中间不容横插一个资产阶级专政。`
+            },
+            {
+                q: "10.新民主主义的文化纲领p54",
+                a: `• 新民主主义文化,就是无产阶级领导的人民大众的反帝反封建的文化,即民族的科学的大众的文化。`
+            },
+            {
+                q: "11.新民主主义革命的三大法宝p59",
+                a: `• 简记:统装党\n 统一战线、武装斗争、党的建设\n\n• 提出:《<共产党人>发刊词》\n\n• 关于统一战线:\na.统一战线先后经历了第一次国共合作的统一战线、工农民主统一战线、抗日民族统一战线、人民民主统一战线等几个时期\n\nb.统一战线的实践经验:\n■ 一要建立巩固的工农联盟\n■ 二要正确对待资产阶级,尤其是民族资产阶级\n■ 三要采取区别对待的方针(发展进步、争取中间、孤立顽固)\n■ 四要坚持独立自主的原则`
+            },
+            {
+                q: "12.从新民主主义到社会主义",
+                a: `• 新民主主义社会是一个过渡性的社会\n\n• 党在过渡时期总路线的内容p72\n\n1.1953年6月正式提出,同年12月形成完整表述。\n\n2.从中华人民共和国成立到社会主义改造基本完成,是一个过渡时期,党在这个时期的总路线和总任务,是要在一个相当长的时期内,逐步实现国家的社会主义工业化,并逐步实现国家对农业、手工业和资本主义工商业的社会主义改造,即“一化三改”。\n\n3.它们之间相互联系,不可分离,可以比喻为鸟的“主体”和“两翼”。其中,“一化”是“主体”,“三改”是“两翼”,两者相辅相成、相互促进。`
+            },
+            {
+                q: "13.农业、手工业的社会主义改造P76",
+                a: `• 对农业的社会主义改造\n1.积极引导农民组织起来,走互助合作道路。\n2.遵循自愿互利、典型示范和国家帮助的原则,以互助合作的优越性吸引农民走互助合作道路。\n3.正确分析农村的阶级和阶层状况,制定正确的阶级政策。\n4.坚持积极领导、稳步前进的方针,采取循序渐进的步骤。\n。农业社会主义改造大体上经历了互助组、初级社和高级社三个发展阶段。\n\n• 对手工业的社会主义改造\n1.通过合作化道路,把个体手工业经济改造成为社会主义经济的过程。\n2.方针:“积极领导,稳步前进”\n3.方法:从供销合作到生产合作的道路。说服教育、典型示范和国家帮助。`
+            },
+            {
+                q: "14.对资本主义工商业的社会主义改造的三方面、步骤P80",
+                a: `三方面:\n• 用和平赎买的方法改造资本主义工商业。\n• 采取从低级到高级的国家资本主义的过渡形式。\n• 把资本主义工商业者改造成为自食其力的社会主义劳动者。\n\n步骤:\n• 主要实现初级形式的国家资本主义\n• 主要实行个别企业的公私合营\n• 实行全行业的公私合营`
+            },
+            {
+                q: "15.社会主义改造的历史经验P83",
+                a: `• 坚持社会主义工业化建设与社会主义改造同时并举。(“两个转变”同时并举P69)\n\n• 采取积极引导、逐步过渡的方式。\n\n• 用和平方法进行改造`
+            },
+            {
+                q: "16.确立社会主义基本制度的重大意义P89",
+                a: `• 中国历史上最深刻最伟大的社会变革,为当代中国一切发展进步奠定了制度基础,为中国特色社会主义制度的创立和发展提供了重要前提。`
+            },
+            {
+                q: "17.理论成果",
+                a: `• 调动一切积极因素为社会主义事业服务P93\n 调用一切积极因素为社会主义事业服务,必须坚持中国共产党的领导;调用一切积极因素为社会主义事业服务,必须发展社会主义民主政治。\n\n• 正确认识和处理社会主义社会矛盾的思想P97\n• 社会主义社会基本矛盾运动具有“又相适应又相矛盾”的特点\n• 基本矛盾:仍然是生产关系和生产力之间的矛盾,上层建筑和经济基础之间的矛盾(非对抗性,因为两两已基本适应)\n “它可以通过社会主义制度本身,不断地得到解决”\n• 主要矛盾:党的八大正确分析了社会主义改造完成后我国社会主要矛盾的变化:人民对于经济文化迅速发展的需要同当前经济文化不能满足人民需要的状况之间的矛盾\n• 根本任务:解放生产力,发展生产力,逐步实现社会主义现代化\n• 两类不同性质的矛盾:\n1.敌我矛盾:是人民同反抗社会主义革命、敌视和破坏社会主义建设的社会势力和社会集团的矛盾,这是根本利益对立基础上的矛盾,(对抗性)\n2.人民内部矛盾:人民内部矛盾是在人民根本利益一致基础上的矛盾(非对抗性)\n。用民主的方法解决人民内部矛盾,这是一个总方针\n■ 对于政治思想领域的人民内部矛盾,实行“团结—批评—团结”的方针,坚持说服教育、讨论的方法;\n■ 对于物质利益、分配方面的人民内部矛盾,实行统筹兼顾、适当安排的方针,兼顾国家、集体和个人三方面的利益;\n■ 对于人民群众和政府机关的矛盾,要坚持民主集中制原则,努力克服政府机关的官僚主义,也要加强对群众的思想教育;\n■ 对于科学文化领域里的矛盾,实行“百花齐放、百家争鸣”的方针,通过自由讨论和科学实践、艺术实践去解决;\n■ 对于共产党和民主党派的矛盾,实行在坚持社会主义道路和共产党领导的前提下“长期共存、互相监督”的方针;\n■ 对于民族之间的矛盾,实行民族平等、团结互助的方针。\n\n• 走中国工业化道路的思想P101\n• 在《关于正确处理人民内部矛盾的问题》中,毛泽东明确提出了中国工业化道路的问题,主要是指重工业和轻工业、农业的发展关系问题,强调要走一条有别于苏联的中国工业化道路。\n• 党的八大提出了既反保守又反冒进、坚持在综合平衡中稳步前进的方针。\n• 总方针:农业为基础,以工业为主导,以农轻重为序发展国民经济\n“两条腿走路”:重工业与轻工业、大型与中小型企业、中央工业与地方工业、沿海工业和内地工业同时并举\n• 走中国工业化道路,必须采取正确的经济建设方针。\n• 走中国工业化道路,必须调整和完善所有制结构。\n• 走中国工业化道路,必须积极探索适合我国情况的经济体制和运行机制。\n\n• 初步探索的其他理论成果P104\n• 社会主义发展阶段\n• “四个现代化”:工业现代化,农业现代化,科学文化现代化,国防现代化\n• 科学教育文化工作:“向科学进军”“两种劳动制度、两种教育制度”\n• 国防建设:“三线建设”“备战、备荒、为人民”\n• 祖国统一:\n。“武统台湾”\n。20世纪50年代中期,提出和平解放台湾:“和为贵”“爱国一家”“爱国不分先后”省亲会友、来去自由,既往不咎、立功受奖,国共合作、爱国一家,和平解放、互不破坏。“一纲四目”,一个中国原则。\n• 国际战略和外交工作\n• 执政党建设`
+            },
+            {
+                q: "18.《论十大关系》的提出、方针与内容p94",
+                a: `• 1956年,毛泽东作了《论十大关系》的报告,初步总结了我国社会主义建设的经验,明确提出要以苏为鉴,独立自主地探索适合中国情况的社会主义建设道路,标志着党探索中国社会主义建设道路的良好开端。\n\n• 《论十大关系》确立“努力把党内党外、国内国外的一切积极的因素,直接的、间接的积极因素,全部调动起来”,为社会主义建设服务的基本方针。\n\n• 主要内容(涉及生产力与生产关系、经济基础与上层建筑各方面)这个好像不是很重要:\n1.重工业和轻工业、农业的关系\n2.沿海工业和内地工业的关系\n3.经济建设和国防建设的关系\n4.国家、生产单位和生产者个人的关系\n5.中央和地方的关系\n6.汉族和少数民族的关系\n7.党和非党的关系\n8.革命和反革命的关系\n9.是非关系\n10.中国和外国的关系`
+            },
+            {
+                q: "19.初步探索的意义P110",
+                a: `• 巩固和发展了我国的社会主义制度。\n• 为开创中国特色社会主义提供了宝贵经验、理论准备、物质基础。\n• 丰富了科学社会主义的理论和经验。`
+            },
+            {
+                q: "20.初步探索的经验教训P112",
+                a: `• 必须把马克思主义与中国实际相结合,探索符合中国特点的社会主义建设道路。\n• 必须正确认识社会主义社会的主要矛盾和根本任务,集中力量发展生产力。\n• 必须从实际出发进行社会主义建设,建设规模和速度要与国力相适应,不能急于求成。\n• 必须发展社会主义民主,健全社会主义法制。\n• 必须坚持党的民主集中制和集体领导制度,加强执政党建设。\n• 必须坚持对外开放,借鉴和吸收人类文明成果建设社会主义,不能关起门来搞建设。`
+            },
+            {
+                q: "21.国际背景P118",
+                a: `• 从“战争与革命”到“和平与发展”`
+            },
+            {
+                q: "22.中国特色社会主义理论体系的形成p134",
+                a: `• 1978年12月召开的党的十一届三中全会,重新确立了实事求是的思想路线,彻底否定了“以阶级斗争为纲”的错误理论和实践,确定把全党工作的着重点转移到社会主义现代化建设上来,作出实行改革开放的重大决策,实现了党的历史上具有深远意义的伟大转折\n\n• 1987年召开的党的十三大,第一次比较系统地论述了我国社会主义初级阶段理论,明确概括和全面阐发了党的“一个中心、两个基本点”的基本路线\n\n• 1997年召开的党的十五大正式提出“邓小平理论”这一概念,郑重地把邓小平理论同马克思列宁主义、毛泽东思想一起,确立为党的指导思想并写入党章(1999载入宪法)\n\n• 党的十九大、十九届六中全会提出的“十个明确”“十四个坚持”“十三个方面成就”概括了习近平新时代中国特色社会主义思想的主要内容(十九大写入党章)`
+            },
+            {
+                q: "23.中国特色社会主义理论体系的地位p148",
+                a: `• 中国特色社会主义理论体系是中国共产党长期探索的伟大理论创造,同马克思列宁主义、毛泽东思想一脉相承又与时俱进,是马克思主义中国化时代化的重大理论成果。\n\n• 中国特色社会主义理论体系是全党全国各族人民团结奋斗的共同思想基础,是战胜来自政治、经济、社会和自然界等一切风险和挑战的精神支柱,是坚持和发展中国特色社会主义的行动指南,是全面推进中华民族伟大复兴的根本指针,是我们党最可宝贵的政治和精神财富.`
+            },
+            {
+                q: "24.社会主义的本质p152",
+                a: `• 搞清楚“什么是社会主义,怎样建设社会主义”,关键是要在坚持社会主义基本制度的基础上进一步认清社会主义的本质\n\n• 1992年初,邓小平在南方谈话中对社会主义本质作出了总结性的理论概括:“社会主义的本质就是解放生产力,发展生产力,消灭剥削,消除两极分化,最终达到共同富裕”`
+            },
+            {
+                q: "25.邓小平理论的精髓p153",
+                a: `• 解放思想,实事求是`
+            },
+            {
+                q: "26.社会主义初级阶段理论P158",
+                a: `• 我国社会已经是社会主义社会。我们必须坚持而不能离开社会主义。\n• 我国的社会主义社会还处在初级阶段。我们必须从这个实际出发,而不能超越这个阶段。`
+            },
+            {
+                q: "27.党在社会主义初期阶段的基本路线P160",
+                a: `• 领导和团结全国各族人民,(实现奋斗目标的领导力量和依靠力量)\n\n• 以经济建设为中心(根本任务),坚持四项基本原则(解放和发展社会生产力的政治保证),坚持改革开放(社会主义的发展动力和外部条件),\n(实现奋斗目标的基本途径)“一个中心,两个基本点”\n\n坚持四项基本原则\n。坚持社会主义道路\n。坚持人民民主专政\n。坚持共产党的领导\n 坚持马列主义毛泽东思想\n\n• 自力更生,艰苦创业,(实现奋斗目标的根本立足点)\n\n• 为把我国建设为富强(经济目标要求),民主(政治目标要求),文明(思想文化目标要求)的社会主义现代化国家而奋斗。\n(党在社会主义初级阶段的奋斗目标)`
+            },
+            {
+                q: "28.“一国两制”与祖国统一",
+                a: `• 1979年元旦,全国人大常委会发表《告台湾同胞书》。\n• 香港问题和澳门问题是历史上殖民主义侵略遗留下来的问题。\n• 台湾问题是国内战争遗留下来的问题,属于中国的内政,不容外国干涉。\n• 一国两制”作为实现祖国和平统的具有重大战略意义的构想,包含着丰富的科学内涵。其基本内容有:\n。坚持一个中国,这是“和平统一、一国两制”的核心,是发展两岸关系和实现和平统一的基础;\n。两制并存、在祖国统一的前提下,国家的主体部分实行社会主义制度,同时在香港、澳门、台湾保持原有的社会制度和生活方式长期不变;\n 高度自治,祖国完全统一后,香港、澳门、台湾作为中央政府全面管辖下的特别行政区,享有不同于中国其他省、市、自治区的高度自治权,台湾、香港、澳门同胞各种合法权益将得到切实尊重和维护;\n 尽最大努力争取和平统一,但不承诺放弃使用武力;\n 解决台湾问题、实现祖国完全统一,寄希望于台湾人民。`
+            },
+            {
+                q: "29.邓小平理论的历史地位",
+                a: `• 马克思列宁主义、毛泽东思想的继承和发展\n• 中国特色社会主义理论体系的开篇之作\n• 改革开放和社会主义现代化建设的科学指南`
+            },
+            {
+                q: "30.三个代表重要思想的核心观点p191",
+                a: `• 始终代表中国先进生产力的发展要求。\n• 始终代表中国先进文化的前进方向。\n• 始终代表中国最广大人民的根本利益。`
+            },
+            {
+                q: "31.发展先进文化的内涵p195",
+                a: `• 发展先进文化,就是发展中国特色社会主义的文化,就是建设社会主义精神文明。\n\n• 发展先进文化,就是发展面向现代化、面向世界、面向未来的,民族的科学的大众的社会主义文化。\n\n• 发展先进文化,要把弘扬主旋律和提倡多样化统一起来,支持健康有益文化,努力改造落后文化,坚决抵制腐朽文化。\n\n这四个大力倡导是在第三条下面的,也需要重点掌握,题目可能会出“怎么做”or直接摆出第三条↓\n\n大力倡导一切有利于发扬爱国主义、集体主义、社会主义的思想和精神;\n大力倡导一切有利于改革开放和现代化建设的思想和精神;\n大力倡导一切有利于民族团结、社会进步、人民幸福的思想和精神;\n大力倡导一切用诚实劳动争取美好生活的思想和精神。`
+            },
+            {
+                q: "32.建立社会主义经济体制P208",
+                a: `• 在建立什么样的经济体制问题上,江泽民根据邓小平南方谈话精神,明确提出使用“社会主义市场经济体制”这个提法。\n\n• 党的十四大正式把建立社会主义市场经济体制确立为我国经济体制改革的目标。\n\n• 党的十四届三中全会通过的《中共中央关于建立社会主义市场经济体制若干问题的决定》,勾画了建立社会主义市场经济体制的蓝图和基本框架。`
+            },
+            {
+                q: "33.建设社会主义政治文明P213",
+                a: `• 建设社会主义政治文明,发展社会主义民主政治,是社会主义现代化建设的重要目标。\n\n• 建设社会主义政治文明涉及政治思想、政治制度、行政管理、法制建设等方面,是一个系统工程。\n建设社会主义政治文明,最根本的就是要坚持党的领导、人民当家作主和依法治国的有机统一。\n\n• 建设社会主义政治文明,必须发展社会主义民主。\n\n• 建设社会主义政治文明,必须坚持和完善中国特色社会主义政治制度。\n\n• 建设社会主义政治文明,必须坚持依法治国,建设社会主义法治国家。`
+            },
+            {
+                q: "34.推进党的建设伟大工程",
+                a: `• 坚持党在建设中国特色社会主义事业中的领导核心地位,发挥总揽全局、协调各方的作用。\n• 核心是坚持党的先进性。\n• 推进党的建设新的伟大工程,重点是加强党的执政能力建设。\n• 坚持用马克思主义武装全党。\n• 把党的最低纲领和最高纲领统一起来。\n• 民主集中制是我们党一贯坚持的根本组织制度和领导制度。\n• 坚持正确的用人导向。\n• 领导干部一定要讲学习、讲政治、讲正气。\n• 党的基层组织是党的全部工作和战斗力的基础。\n 坚持党要管党、从严治党的方针。\n\n加强和改进党的作风建设\n 核心问题是保持党同人民群众的血肉联系。\n。我们党的最大政治优势是密切联系群众,\n。党执政后的最大危险是脱离群众。\n 全心全意为人民服务,立党为公,执政为民,是我们党同一切剥削阶级政党的根本区别。\n。与人民群众同呼吸共命运的立场不能变,\n 全心全意为人民服务的宗旨不能忘,\n 坚信群众是真正英雄的历史唯物主义观点不能丢。\n• 坚决反对和防止腐败是全党一项重大的政治任务。`
+            },
+            {
+                q: "35.以人为本是科学发展观的核心立场p234",
+                a: `• 坚持以人为本,就要坚持发展为了人民,始终把最广大人民的根本利益放在第一位。\n• 坚持以人为本,就耍坚持发展依靠人民,从人民群众的伟大创造中汲取智慧和力量。\n• 坚持以人为本,就要坚持发展成果由人民共享,着力提高人民物质文化生活水平。\n• 坚持以人为本,最终是为了实现人的全面发展。`
+            },
+            {
+                q: "36.科学发展观的基本要求p235",
+                a: `• 全面、协调、可持续`
+            },
+            {
+                q: "37.构建社会主义和谐社会P251",
+                a: `• 胡锦涛明确指出:“社会和谐是中国特色社会主义的本质属性”`
+            },
+            {
+                q: "38.全面提高党的建设科学化水平P257",
+                a: `• 执政能力建设是党执政后的一项根本建设。\n• 保持和发展党的先进性是马克思主义政党自身建设的根本任务和永恒课题。`
+            }
+        ];
+
+        // Chapters
+        const chapters = [
+            { id: 'intro', name: '导论' },
+            { id: 'ch1', name: '第1章 毛泽东思想' },
+            { id: 'ch2', name: '第2章 新民主主义革命理论' },
+            { id: 'ch3', name: '第3章 社会主义改造理论' },
+            { id: 'ch4', name: '第4章 社会主义建设道路初步探索' },
+            { id: 'ch5', name: '第5章 中国特色社会主义理论体系' },
+            { id: 'ch6', name: '第6章 邓小平理论' },
+            { id: 'ch7', name: '第7章 三个代表重要思想' },
+            { id: 'ch8', name: '第8章 科学发展观' },
+        ];
+
+        function extractQuestionNumber(text) {
+            const m = String(text).trim().match(/^\s*(\d+)\./);
+            return m ? parseInt(m[1], 10) : null;
+        }
+
+        // 章节映射（按题号范围，后续你也可以按需微调）
+        function chapterIdForQuestionNumber(n) {
+            if (n == null) return 'intro';
+            if (n >= 1 && n <= 4) return 'intro';
+            if (n >= 5 && n <= 7) return 'ch1';
+            if (n >= 8 && n <= 11) return 'ch2';
+            if (n >= 12 && n <= 16) return 'ch3';
+            if (n >= 17 && n <= 20) return 'ch4';
+            if (n >= 21 && n <= 23) return 'ch5';
+            if (n >= 24 && n <= 29) return 'ch6';
+            if (n >= 30 && n <= 34) return 'ch7';
+            if (n >= 35 && n <= 38) return 'ch8';
+            return 'intro';
+        }
+
+        // App State
+        const masterCards = rawData.map((c, idx) => {
+            const qn = extractQuestionNumber(c.q);
+            return {
+                ...c,
+                _id: idx,
+                _qn: qn,
+                chapter: chapterIdForQuestionNumber(qn),
+            };
+        });
+
+        let deck = [...masterCards];
+        let activeChapter = chapters[0].id;
+        let chapterCards = deck.filter((c) => c.chapter === activeChapter);
+        let cards = [...chapterCards];
+        let currentIndex = 0;
+        let isAnswerShown = false;
+
+        // Elements
+        const flashcardEl = document.getElementById('flashcard');
+        const questionEl = document.getElementById('card-question');
+        const answerEl = document.getElementById('card-answer');
+        const answerWrapperEl = document.getElementById('answer-wrapper');
+        const progressEl = document.getElementById('progress-text');
+        const selectorEl = document.getElementById('card-selector');
+        const chapterSelectorEl = document.getElementById('chapter-selector');
+
+        // Initialization
+        function init() {
+            // Populate chapter selector
+            chapterSelectorEl.innerHTML = chapters.map((ch) => `<option value="${ch.id}">${ch.name}</option>`).join('');
+            chapterSelectorEl.value = activeChapter;
+
+            // Populate card selector
+            rebuildCardSelector();
+            renderCard();
+        }
+
+        function rebuildCardSelector() {
+            selectorEl.innerHTML = cards
+                .map((c, i) => {
+                    const prefix = c._qn != null ? `${c._qn}. ` : `${i + 1}. `;
+                    const label = `${prefix}${c.q.replace(/^\s*\d+\./, '').trim().substring(0, 12)}...`;
+                    return `<option value="${i}">${label}</option>`;
+                })
+                .join('');
+        }
+
+        function applyChapterFilter() {
+            chapterCards = deck.filter((c) => c.chapter === activeChapter);
+            cards = [...chapterCards];
+            if (currentIndex < 0) currentIndex = 0;
+            if (currentIndex > cards.length - 1) currentIndex = 0;
+            rebuildCardSelector();
+        }
+
+        function setChapter(chapterId) {
+            activeChapter = chapterId;
+            applyChapterFilter();
+            currentIndex = 0;
+            renderCard();
+            chapterSelectorEl.blur();
+        }
+
+        // Render current card
+        function renderCard() {
+            const card = cards[currentIndex];
+            questionEl.textContent = card.q;
+            
+            // Check if answer contains HTML (table) or plain text
+            if (card.a.includes('<table')) {
+                answerEl.innerHTML = card.a;
+            } else {
+                answerEl.textContent = card.a;
+            }
+            
+            progressEl.textContent = `${currentIndex + 1} / ${cards.length}`;
+            selectorEl.value = currentIndex;
+            
+            // Reset answer visibility
+            isAnswerShown = false;
+            answerWrapperEl.classList.add('hidden');
+        }
+
+        // Toggle answer visibility (show below question)
+        function toggleCard() {
+            isAnswerShown = !isAnswerShown;
+            if (isAnswerShown) {
+                answerWrapperEl.classList.remove('hidden');
+            } else {
+                answerWrapperEl.classList.add('hidden');
+            }
+        }
+
+        // Navigation
+        function nextCard(e) {
+            if(e) e.stopPropagation();
+            if (currentIndex < cards.length - 1) {
+                currentIndex++;
+            } else {
+                // 本章节最后一题：跳到下一章节第一题
+                const currentChapterIdx = chapters.findIndex((c) => c.id === activeChapter);
+                const nextChapterIdx = currentChapterIdx >= 0 ? (currentChapterIdx + 1) % chapters.length : 0;
+                activeChapter = chapters[nextChapterIdx].id;
+                chapterSelectorEl.value = activeChapter;
+                currentIndex = 0;
+                applyChapterFilter();
+            }
+            renderCard();
+        }
+
+        function prevCard(e) {
+            if(e) e.stopPropagation();
+            if (currentIndex > 0) {
+                currentIndex--;
+            } else {
+                currentIndex = cards.length - 1; // Loop to end
+            }
+            renderCard();
+        }
+
+        function jumpToCard(index) {
+            currentIndex = parseInt(index);
+            renderCard();
+            // Remove focus from select to avoid keyboard navigation issues
+            selectorEl.blur();
+        }
+
+        function shuffleCards() {
+            // Fisher-Yates shuffle（对全题库乱序）
+            deck = [...masterCards];
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            currentIndex = 0;
+            applyChapterFilter();
+            
+            renderCard();
+            // Optional: visual feedback
+            const btn = document.querySelector('button[onclick="shuffleCards()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> 已乱序';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 1000);
+        }
+
+        function resetOrder() {
+            deck = [...masterCards];
+            currentIndex = 0;
+            applyChapterFilter();
+            renderCard();
+
+            const btn = document.querySelector('button[onclick="resetOrder()"]');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> 已正序';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 1000);
+            }
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                // Only flip if not focused on select/button
+                if (document.activeElement.tagName !== 'SELECT' && document.activeElement.tagName !== 'BUTTON') {
+                     toggleCard();
+                     e.preventDefault(); 
+                }
+            } else if (e.code === 'ArrowRight') {
+                nextCard();
+            } else if (e.code === 'ArrowLeft') {
+                prevCard();
+            }
+        });
+
+        // Run
+        init();
+
+    </script>
+</body>
+</html>

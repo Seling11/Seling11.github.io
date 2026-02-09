@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>周圣业｜网页版简历</title>
+  <style>
+    /* ====== Design Tokens ====== */
+    :root{
+      --bg: #0b1020;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.08);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.68);
+      --faint: rgba(255,255,255,.45);
+      --line: rgba(255,255,255,.12);
+      --shadow: 0 18px 55px rgba(0,0,0,.35);
+      --radius: 18px;
+
+      --accent: #7c5cff;
+      --accent2:#22c55e;
+      --warn:#f59e0b;
+
+      --max: 1080px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+              Arial, "Noto Sans", "Liberation Sans", "PingFang SC", "Hiragino Sans GB",
+              "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+    }
+
+    /* Light theme */
+    [data-theme="light"]{
+      --bg: #f6f7fb;
+      --card: rgba(0,0,0,.04);
+      --card2: rgba(0,0,0,.06);
+      --text: rgba(0,0,0,.88);
+      --muted: rgba(0,0,0,.62);
+      --faint: rgba(0,0,0,.44);
+      --line: rgba(0,0,0,.10);
+      --shadow: 0 18px 55px rgba(0,0,0,.10);
+    }
+
+    *{ box-sizing: border-box; }
+    html{ scroll-behavior:smooth; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(124,92,255,.35), transparent 55%),
+                  radial-gradient(1000px 600px at 80% 0%, rgba(34,197,94,.22), transparent 60%),
+                  radial-gradient(1000px 700px at 50% 110%, rgba(245,158,11,.18), transparent 55%),
+                  var(--bg);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    a{ color: inherit; text-decoration: none; }
+    a:hover{ text-decoration: underline; }
+
+    .container{
+      width: min(var(--max), calc(100% - 36px));
+      margin: 0 auto;
+      padding: 28px 0 70px;
+    }
+
+    /* ====== Top Bar ====== */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(0,0,0,.28), rgba(0,0,0,0));
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    [data-theme="light"] .topbar{
+      background: linear-gradient(to bottom, rgba(255,255,255,.75), rgba(255,255,255,0));
+      border-bottom: 1px solid rgba(0,0,0,.06);
+    }
+
+    .topbar-inner{
+      width: min(var(--max), calc(100% - 36px));
+      margin: 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 12px 0;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 220px;
+    }
+    .avatar{
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,.45), transparent 40%),
+        linear-gradient(135deg, rgba(124,92,255,.9), rgba(34,197,94,.75));
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.18);
+      flex: 0 0 auto;
+    }
+    .brand-title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+    .brand-title b{ font-size: 14px; letter-spacing:.2px; }
+    .brand-title span{ font-size: 12px; color: var(--muted); }
+
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      justify-content:center;
+    }
+    .pill{
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12.5px;
+      transition: transform .15s ease, background .15s ease;
+      user-select:none;
+    }
+    .pill:hover{ transform: translateY(-1px); background: var(--card2); color: var(--text); }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 220px;
+      justify-content:flex-end;
+    }
+    .btn{
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 12.5px;
+      cursor:pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); background: var(--card2); border-color: rgba(124,92,255,.35); }
+    .btn.secondary{ color: var(--muted); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(34,197,94,.78));
+      border-color: rgba(255,255,255,.14);
+    }
+
+    /* ====== Hero ====== */
+    .hero{
+      margin-top: 22px;
+      padding: 26px;
+      border-radius: calc(var(--radius) + 6px);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position: relative;
+    }
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(800px 260px at 10% 10%, rgba(124,92,255,.35), transparent 55%),
+        radial-gradient(700px 260px at 90% 10%, rgba(34,197,94,.22), transparent 60%);
+      opacity: .9;
+      pointer-events:none;
+      mask-image: linear-gradient(to bottom, black, transparent 70%);
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      position: relative;
+    }
+    @media (max-width: 900px){
+      .hero-grid{ grid-template-columns: 1fr; }
+    }
+    .h-title{
+      font-size: clamp(24px, 3vw, 34px);
+      margin: 0 0 6px 0;
+      letter-spacing: .2px;
+    }
+    .h-sub{
+      margin: 0 0 14px 0;
+      color: var(--muted);
+      font-size: 14.5px;
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .chip{
+      font-size: 12.5px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.10);
+      color: var(--muted);
+    }
+    [data-theme="light"] .chip{ background: rgba(255,255,255,.6); }
+
+    .contact-card{
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.10);
+      padding: 14px 14px 12px;
+    }
+    [data-theme="light"] .contact-card{ background: rgba(255,255,255,.65); }
+    .kv{
+      display:grid;
+      grid-template-columns: 86px 1fr;
+      gap: 8px 10px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .kv b{ color: var(--text); font-weight: 600; }
+    .kv code{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    /* ====== Sections ====== */
+    section{ margin-top: 22px; }
+    .section-title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap: 12px;
+      margin: 0 0 12px 0;
+    }
+    .section-title h2{
+      margin:0;
+      font-size: 16px;
+      letter-spacing:.2px;
+    }
+    .section-title p{
+      margin:0;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 900px){
+      .grid-2{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    }
+    [data-theme="light"] .card{ box-shadow: 0 10px 30px rgba(0,0,0,.08); }
+
+    .list{
+      margin: 10px 0 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13.5px;
+    }
+    .list li{ margin: 6px 0; }
+
+    .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .tag{
+      font-size: 12px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: rgba(0,0,0,.10);
+    }
+    [data-theme="light"] .tag{ background: rgba(255,255,255,.65); }
+
+    /* ====== Projects (collapsible) ====== */
+    .project{
+      border-radius: calc(var(--radius) + 2px);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      overflow:hidden;
+    }
+    details{ border-radius: inherit; }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      padding: 16px;
+      display:flex;
+      gap: 14px;
+      align-items:flex-start;
+    }
+    summary::-webkit-details-marker{ display:none; }
+
+    .proj-left{
+      flex: 1 1 auto;
+      min-width: 220px;
+    }
+    .proj-title{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap: 8px 10px;
+      margin:0 0 6px 0;
+    }
+    .proj-title b{
+      font-size: 14.5px;
+      letter-spacing:.2px;
+    }
+    .proj-title .role{
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.10);
+    }
+    [data-theme="light"] .proj-title .role{ background: rgba(255,255,255,.65); }
+    .proj-sub{
+      color: var(--muted);
+      font-size: 12.5px;
+      margin:0;
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+    .proj-sub span{ display:inline-flex; align-items:center; gap: 6px; }
+
+    /* Photo placeholder */
+    .photo{
+      width: 240px;
+      max-width: 36vw;
+      aspect-ratio: 16 / 10;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.28);
+      background:
+        radial-gradient(180px 120px at 30% 20%, rgba(124,92,255,.30), transparent 60%),
+        radial-gradient(180px 120px at 70% 30%, rgba(34,197,94,.18), transparent 65%),
+        rgba(0,0,0,.16);
+      position: relative;
+      overflow:hidden;
+      flex: 0 0 auto;
+    }
+    [data-theme="light"] .photo{
+      border: 1px dashed rgba(0,0,0,.20);
+      background:
+        radial-gradient(180px 120px at 30% 20%, rgba(124,92,255,.20), transparent 60%),
+        radial-gradient(180px 120px at 70% 30%, rgba(34,197,94,.16), transparent 65%),
+        rgba(255,255,255,.65);
+    }
+    .photo img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:none; /* 默认隐藏：你添加图片后把 display 改为 block 或用JS自动显示 */
+    }
+    .photo .ph{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 10px;
+      text-align:center;
+    }
+    .photo .ph b{ color: var(--text); font-size: 12.5px; }
+    .photo .ph code{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--text);
+    }
+
+    details[open] summary{
+      border-bottom: 1px solid var(--line);
+      background: rgba(0,0,0,.06);
+    }
+    [data-theme="light"] details[open] summary{
+      background: rgba(255,255,255,.45);
+    }
+
+    .proj-body{
+      padding: 14px 16px 16px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+    }
+    @media (max-width: 900px){
+      .proj-body{ grid-template-columns: 1fr; }
+      .photo{ width: 100%; max-width: 100%; }
+    }
+    .hint{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.08);
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    [data-theme="light"] .hint{ background: rgba(255,255,255,.55); }
+
+    .foot{
+      margin-top: 22px;
+      color: var(--faint);
+      font-size: 12px;
+      text-align:center;
+    }
+    .kbd{
+      font-family: var(--mono);
+      border: 1px solid var(--line);
+      background: var(--card);
+      padding: 1px 6px;
+      border-radius: 7px;
+      color: var(--text);
+    }
+
+    /* Print */
+    @media print{
+      .topbar, .actions, .pill{ display:none !important; }
+      body{ background: #fff; color:#000; }
+      .card, .hero, .project{
+        box-shadow:none !important;
+        background:#fff !important;
+        border-color:#ddd !important;
+      }
+      .photo{ border-color:#bbb !important; background:#fff !important; }
+      a{ text-decoration: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ===== Sticky Nav ===== -->
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="avatar" aria-hidden="true"></div>
+        <div class="brand-title">
+          <b>周圣业｜网页版简历</b>
+          <span>Microelectronics / FPGA / CV</span>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="站内导航">
+        <a class="pill" href="#about">概览</a>
+        <a class="pill" href="#edu">教育</a>
+        <a class="pill" href="#skills">技能</a>
+        <a class="pill" href="#projects">项目</a>
+        <a class="pill" href="#honors">成果&获奖</a>
+      </nav>
+
+      <div class="actions">
+        <button class="btn secondary" id="btnTheme" type="button" title="切换主题">主题</button>
+        <button class="btn" type="button" onclick="window.print()" title="打印 / 导出 PDF">导出PDF</button>
+        <button class="btn primary" id="btnCopy" type="button" title="复制联系方式">复制联系</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- ===== Hero / About ===== -->
+    <section id="about" class="hero">
+      <div class="hero-grid">
+        <div>
+          <h1 class="h-title">周圣业</h1>
+          <p class="h-sub">
+            电子科技大学｜微电子科学与工程（在读） · 方向：FPGA/嵌入式系统/计算机视觉
+          </p>
+
+          <div class="chips">
+            <span class="chip">成绩：2024-2025 学年 23/152</span>
+            <span class="chip">预估保研评定：前 10%</span>
+            <span class="chip">擅长：Verilog / OpenCV / 嵌入式 / Web</span>
+          </div>
+
+          <div class="hint">
+            你可以把这里当作“个人亮点摘要区”。建议后续补充：目标岗位、研究兴趣、代表性成果（论文/开源/博客链接）、个人作品集入口。
+          </div>
+        </div>
+
+        <aside class="contact-card" aria-label="联系方式">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <b style="font-size:14px;">联系方式</b>
+            <span style="font-size:12px;color:var(--muted);">一键复制更方便</span>
+          </div>
+          <div class="kv" id="contactKv">
+            <div>地点</div><b>四川省成都市郫都区</b>
+            <div>手机</div><code id="phone">13152170139</code>
+            <div>邮箱</div><code id="email">2023190904022@std.uestc.edu.cn</code>
+            <div>学校</div><b>电子科技大学</b>
+            <div>专业</div><b>微电子科学与工程</b>
+          </div>
+          <div class="hint" style="margin-top:12px;">
+            建议增加：GitHub / 个人主页 / 作品集 / 竞赛证书或专利链接（若可公开）。
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== Education & Coursework ===== -->
+    <section id="edu">
+      <div class="section-title">
+        <h2>教育背景</h2>
+        <p>建议：用“量化信息 + 关键课程”增强可信度</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <b>电子科技大学｜微电子科学与工程</b>
+          <ul class="list">
+            <li>成绩排名：2024-2025 学年 23 / 152</li>
+            <li>预估保研资格评定排名：前 10%</li>
+          </ul>
+          <div class="meta">
+            <span class="tag">大学物理I（97）</span>
+            <span class="tag">编程导论（95）</span>
+            <span class="tag">微电子系统（99）</span>
+            <span class="tag">微积分II（90）</span>
+            <span class="tag">数字逻辑设计（94）</span>
+            <span class="tag">电路分析与设计（92）</span>
+            <span class="tag">电子器件（92）</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <b>学生工作 / 组织经历</b>
+          <ul class="list">
+            <li>班级宣传委员</li>
+            <li>学院社团工作站部长</li>
+            <li>科协副部长</li>
+            <li>党委影像工作室成员</li>
+            <li>课程助教</li>
+          </ul>
+          <div class="hint">
+            强烈建议补充“你做了什么 + 结果是什么”：例如活动规模、传播数据、制度建设、组织协作、培训带教等。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Skills ===== -->
+    <section id="skills">
+      <div class="section-title">
+        <h2>技能能力</h2>
+        <p>建议：按“方向”分组（FPGA / CV / 工程化 / 其他）更专业</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <b>核心技能</b>
+          <ul class="list">
+            <li>硬件描述 / 数字设计：Verilog HDL</li>
+            <li>计算机视觉：OpenCV 图像处理（Python / C++）</li>
+            <li>嵌入式：相机采集链路、HDMI 显示链路、资源受限优化</li>
+          </ul>
+          <div class="meta">
+            <span class="tag">Verilog</span>
+            <span class="tag">OpenCV</span>
+            <span class="tag">FPGA</span>
+            <span class="tag">HDMI</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <b>综合能力</b>
+          <ul class="list">
+            <li>3D 建模、视频制作、网页制作</li>
+            <li>项目管理：队长/负责人经历（任务拆解、进度推进、交付验收）</li>
+          </ul>
+          <div class="hint">
+            你要做“更丰富”的网页版：建议把作品（演示视频、论文/报告、GitHub 仓库、比赛证书）都以链接形式挂上去。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Projects ===== -->
+    <section id="projects">
+      <div class="section-title">
+        <h2>项目经历</h2>
+        <p>每个项目可折叠；右侧为图片占位（后续替换）</p>
+      </div>
+
+      <!-- Project 1 -->
+      <div class="project" style="margin-bottom:14px;">
+        <details open>
+          <summary>
+            <div class="proj-left">
+              <div class="proj-title">
+                <b>图像处理算法的研究与实现</b>
+                <span class="role">项目负责人</span>
+              </div>
+              <p class="proj-sub">
+                <span>🗓️ 2024.01 – 2024.11</span>
+                <span>🧠 OpenCV / 特征点 / 拼接</span>
+              </p>
+            </div>
+
+            <div class="photo" aria-label="项目图片占位">
+              <!-- 你后续把图片放到 assets/project-1.jpg，然后把 img 的 display 改为 block（或看下方JS自动显示） -->
+              <img src="assets/project-1.jpg" alt="图像处理算法项目展示图" />
+              <div class="ph">
+                <b>项目图片占位</b>
+                <div>建议放：效果对比图 / 拼接结果 / 展示海报</div>
+                <code>assets/project-1.jpg</code>
+              </div>
+            </div>
+          </summary>
+
+          <div class="proj-body">
+            <div>
+              <b>工作内容</b>
+              <ul class="list">
+                <li>基于 Python 与 C++ OpenCV 实现特征点检测、仿射/透视变换。</li>
+                <li>结合 SIFT 与 SURF 完成多图拼接。</li>
+              </ul>
+
+              <b style="display:block;margin-top:12px;">成果</b>
+              <ul class="list">
+                <li>项目结题，获评校级优秀项目。</li>
+                <li>在 2025 年新工科作品展展出。</li>
+              </ul>
+
+              <div class="hint">
+                可扩写点（建议你后面补）：拼接精度指标、速度优化、鲁棒性（旋转/光照/遮挡），以及你负责的具体模块（匹配、RANSAC、融合等）。
+              </div>
+            </div>
+
+            <div>
+              <b>技术栈 / 亮点（可继续补充）</b>
+              <div class="meta">
+                <span class="tag">Python</span>
+                <span class="tag">C++</span>
+                <span class="tag">OpenCV</span>
+                <span class="tag">SIFT</span>
+                <span class="tag">SURF</span>
+                <span class="tag">Homography</span>
+              </div>
+
+              <div class="hint">
+                如果你有：演示视频、项目报告、代码仓库链接——建议放在这里，HR/老师会更容易“点开验证”。
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Project 2 -->
+      <div class="project" style="margin-bottom:14px;">
+        <details>
+          <summary>
+            <div class="proj-left">
+              <div class="proj-title">
+                <b>基于易灵思 FPGA 的实时视频畸变校正</b>
+                <span class="role">队长</span>
+              </div>
+              <p class="proj-sub">
+                <span>🗓️ 2025.09 – 2025.12</span>
+                <span>⚙️ Ti60F225 / 相机采集 / HDMI 输出</span>
+              </p>
+            </div>
+
+            <div class="photo" aria-label="项目图片占位">
+              <img src="assets/project-2.jpg" alt="FPGA 畸变校正项目展示图" />
+              <div class="ph">
+                <b>项目图片占位</b>
+                <div>建议放：硬件平台照片 / HDMI 输出画面 / 框图</div>
+                <code>assets/project-2.jpg</code>
+              </div>
+            </div>
+          </summary>
+
+          <div class="proj-body">
+            <div>
+              <b>工作内容</b>
+              <ul class="list">
+                <li>在国产易灵思 Ti60F225 FPGA 平台完成相机采集与处理，并通过 HDMI 输出显示。</li>
+                <li>资源受限条件下采用动态行缓存策略，实现硬件级图像畸变校正。</li>
+              </ul>
+
+              <b style="display:block;margin-top:12px;">成果</b>
+              <ul class="list">
+                <li>嵌入式芯片与系统设计竞赛（FPGA 创新设计赛道）国家级一等奖。</li>
+              </ul>
+
+              <div class="hint">
+                可扩写点：吞吐/帧率、时序/资源占用（LUT/BRAM/DSP）、畸变模型（桶形/枕形）、插值方案、流水线设计。
+              </div>
+            </div>
+
+            <div>
+              <b>技术栈 / 亮点（可继续补充）</b>
+              <div class="meta">
+                <span class="tag">FPGA</span>
+                <span class="tag">Verilog</span>
+                <span class="tag">Line Buffer</span>
+                <span class="tag">HDMI</span>
+                <span class="tag">Camera ISP</span>
+              </div>
+
+              <div class="hint">
+                建议加一张“效果对比图”（校正前/后同一帧），非常加分。
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Project 3 -->
+      <div class="project" style="margin-bottom:14px;">
+        <details>
+          <summary>
+            <div class="proj-left">
+              <div class="proj-title">
+                <b>基于 FPGA 的高精度低功耗智能声音事件检测系统</b>
+                <span class="role">成员</span>
+              </div>
+              <p class="proj-sub">
+                <span>🗓️ 2024.11 – 2025.10</span>
+                <span>🧩 Zynq UltraScale+ ZCU102 / DPU 部署</span>
+              </p>
+            </div>
+
+            <div class="photo" aria-label="项目图片占位">
+              <img src="assets/project-3.jpg" alt="声音事件检测系统展示图" />
+              <div class="ph">
+                <b>项目图片占位</b>
+                <div>建议放：系统框图 / 端到端流程 / 推理界面</div>
+                <code>assets/project-3.jpg</code>
+              </div>
+            </div>
+          </summary>
+
+          <div class="proj-body">
+            <div>
+              <b>工作内容</b>
+              <ul class="list">
+                <li>在 Zynq UltraScale+ ZCU102 的 DPU 上进行部署，实现多种声音事件检测。</li>
+              </ul>
+
+              <div class="hint">
+                可扩写点：模型结构（CNN/CRNN/Transformer?）、量化策略、DPU 编译流程、延迟/功耗对比、数据集与指标（mAP/F1/Top-1）。
+              </div>
+            </div>
+
+            <div>
+              <b>技术栈 / 亮点（可继续补充）</b>
+              <div class="meta">
+                <span class="tag">Zynq</span>
+                <span class="tag">DPU</span>
+                <span class="tag">Edge AI</span>
+                <span class="tag">Quantization</span>
+              </div>
+              <div class="hint">
+                如果你有实验曲线、功耗测试、端到端延迟统计——都可以放成图片/图表，网页呈现效果很好。
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Project 4 -->
+      <div class="project">
+        <details>
+          <summary>
+            <div class="proj-left">
+              <div class="proj-title">
+                <b>简易 16bit RISC CPU 设计</b>
+                <span class="role">队长</span>
+              </div>
+              <p class="proj-sub">
+                <span>🗓️ 2025.09 – 2025.10</span>
+                <span>🏗️ 哈佛结构 / ROM-RAM-CPU 集成验证</span>
+              </p>
+            </div>
+
+            <div class="photo" aria-label="项目图片占位">
+              <img src="assets/project-4.jpg" alt="16bit RISC CPU 项目展示图" />
+              <div class="ph">
+                <b>项目图片占位</b>
+                <div>建议放：CPU 框图 / 流水/控制信号波形 / 板上演示</div>
+                <code>assets/project-4.jpg</code>
+              </div>
+            </div>
+          </summary>
+
+          <div class="proj-body">
+            <div>
+              <b>工作内容</b>
+              <ul class="list">
+                <li>设计可通过 16 位拨码开关输入、LED/七段数码管输出的简易 CPU 系统。</li>
+                <li>采用哈佛结构，集成 ROM / RAM / CPU / 输出控制。</li>
+                <li>CPU 内部完成 Fetch、控制单元与数据通路设计并通过集成验证。</li>
+              </ul>
+
+              <div class="hint">
+                可扩写点：指令集（ISA）、时序（单周期/多周期）、控制方式（硬布线/微码）、流水/冒险处理（如有）、测试程序与覆盖率。
+              </div>
+            </div>
+
+            <div>
+              <b>技术栈 / 亮点（可继续补充）</b>
+              <div class="meta">
+                <span class="tag">Verilog</span>
+                <span class="tag">Harvard</span>
+                <span class="tag">Control Unit</span>
+                <span class="tag">Datapath</span>
+                <span class="tag">Integration Test</span>
+              </div>
+              <div class="hint">
+                如果你能贴一张“指令执行波形图”和“板上演示照片”，这个项目会非常有说服力。
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="hint" style="margin-top:14px;">
+        小技巧：把每个项目的图片统一裁成 <span class="kbd">16:10</span> 或 <span class="kbd">16:9</span>，视觉会更高级；并在图片下方加 1 行说明（如“校正前/后对比”）。
+      </div>
+    </section>
+
+    <!-- ===== Honors ===== -->
+    <section id="honors">
+      <div class="section-title">
+        <h2>成果及获奖情况</h2>
+        <p>建议：能公开就加链接（专利号/证书/作品展页面）</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <b>专利</b>
+          <ul class="list">
+            <li>《一种基于特征点分析的运动检测的方法及其装置》——发明专利，已授权</li>
+          </ul>
+          <div class="hint">可补充：专利号、授权公告日、你在其中的贡献（第一发明人/参与人）。</div>
+        </div>
+
+        <div class="card">
+          <b>竞赛</b>
+          <ul class="list">
+            <li>嵌入式芯片与系统设计竞赛（FPGA 创新设计赛道）：国家级一等奖（企业奖候选）</li>
+            <li>全国大学生电子设计竞赛（四川赛区）：二等奖（2024），二等奖（2025）</li>
+            <li>盟升杯电子设计竞赛：高年级组一等奖</li>
+            <li>电子科技大学创格杯电子设计竞赛：一等奖（第一名）</li>
+            <li>校内课外创新实践项目：中期/结题均优秀，参加新工科作品展</li>
+            <li>大学生创新创业训练项目：中期/结题均优秀</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <b>奖学金</b>
+        <div class="meta" style="margin-top:10px;">
+          <span class="tag">2025 校级优秀学生奖学金</span>
+          <span class="tag">2025 院级学业奖学金</span>
+          <span class="tag">2025 院级瓦特科技创新奖学金（学院前1%）</span>
+          <span class="tag">2024 校级专项奖学金</span>
+          <span class="tag">2024 院级卓越领导力奖学金（学院前1%）</span>
+          <span class="tag">2024 院级科技创新奖学金（学院前5%）</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="foot">
+      © <span id="year"></span> 周圣业 · 本页面支持打印导出 PDF · 建议在项目区补充图片/链接/量化指标，信息密度会更强
+    </div>
+  </main>
+
+  <script>
+    // ===== Theme =====
+    (function initTheme(){
+      const saved = localStorage.getItem("theme");
+      const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      const theme = saved || (prefersLight ? "light" : "dark");
+      document.documentElement.dataset.theme = theme;
+    })();
+
+    document.getElementById("btnTheme").addEventListener("click", () => {
+      const cur = document.documentElement.dataset.theme || "dark";
+      const next = cur === "dark" ? "light" : "dark";
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem("theme", next);
+    });
+
+    // ===== Copy contact =====
+    document.getElementById("btnCopy").addEventListener("click", async () => {
+      const phone = document.getElementById("phone").innerText.trim();
+      const email = document.getElementById("email").innerText.trim();
+      const text = `手机：${phone}\n邮箱：${email}`;
+      try{
+        await navigator.clipboard.writeText(text);
+        toast("已复制联系方式 ✅");
+      }catch(e){
+        toast("复制失败：浏览器不支持剪贴板权限");
+      }
+    });
+
+    // ===== Optional: auto-show images if file exists (best effort) =====
+    // 浏览器无法直接判断本地文件是否存在；部署后可用 fetch 尝试。
+    async function tryShow(img){
+      const src = img.getAttribute("src");
+      if(!src) return;
+      try{
+        const r = await fetch(src, { method:"HEAD", cache:"no-store" });
+        if(r.ok){
+          img.style.display = "block";
+          const ph = img.parentElement.querySelector(".ph");
+          if(ph) ph.style.display = "none";
+        }
+      }catch(_){}
+    }
+    document.querySelectorAll(".photo img").forEach(tryShow);
+
+    // ===== Tiny toast =====
+    const toastEl = document.createElement("div");
+    toastEl.style.cssText = `
+      position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+      padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.55); backdrop-filter: blur(10px);
+      color: rgba(255,255,255,.92); font-size: 12.5px; opacity:0;
+      transition: opacity .15s ease, transform .15s ease;
+      z-index: 9999; pointer-events:none;
+    `;
+    document.body.appendChild(toastEl);
+    let toastTimer = null;
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.style.opacity = "1";
+      toastEl.style.transform = "translateX(-50%) translateY(-2px)";
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>{
+        toastEl.style.opacity = "0";
+        toastEl.style.transform = "translateX(-50%) translateY(6px)";
+      }, 1400);
+    }
+
+    // year
+    document.getElementById("year").innerText = new Date().getFullYear();
+  </script>
+</body>
+</html>

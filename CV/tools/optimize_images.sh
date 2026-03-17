@@ -4,7 +4,7 @@ set -euo pipefail
 # One-click image optimization for this repo.
 #
 # What it does
-# - Finds large project images under CV/assets (default: project-*.png/jpg/jpeg)
+# - Finds large project images under CV/assets (default: project-*.png/jpg/jpeg/heic/heif)
 # - Generates a compressed WebP next to each image (same basename: project-5-b.webp)
 # - Skips small files by default
 # - Refuses to keep a WebP that ends up larger than the original
@@ -15,6 +15,7 @@ set -euo pipefail
 #
 # Requirements
 # - macOS: `brew install webp` (provides `cwebp`)
+# - macOS built-in: `sips` (used as a fallback to convert HEIC/HEIF or other unsupported inputs)
 #
 # Usage
 # - Run from repo root:
@@ -71,6 +72,11 @@ if ! command -v cwebp >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v sips >/dev/null 2>&1; then
+  echo "Missing dependency: sips (expected on macOS)" >&2
+  exit 1
+fi
+
 # macOS stat size helper
 file_size() {
   # shellcheck disable=SC2012
@@ -94,7 +100,7 @@ if [[ "$ALL" -eq 1 ]]; then
     inputs+=("$f")
   done < <(
     find "$ASSETS_DIR" -type f \( \
-      -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" \
+      -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.heic" -o -iname "*.heif" \
     \) ! -iname "*.webp" -print0
   )
 else
@@ -102,7 +108,7 @@ else
     inputs+=("$f")
   done < <(
     find "$ASSETS_DIR" -maxdepth 1 -type f \( \
-      -iname "project-*.png" -o -iname "project-*.jpg" -o -iname "project-*.jpeg" \
+      -iname "project-*.png" -o -iname "project-*.jpg" -o -iname "project-*.jpeg" -o -iname "project-*.heic" -o -iname "project-*.heif" \
     \) -print0
   )
 fi
@@ -149,10 +155,24 @@ for in_path in "${inputs[@]}"; do
   # -resize $MAX_PX 0: constrain width to MAX_PX; if portrait, cwebp keeps aspect ratio
   # NOTE: cwebp's resize works as (width height). Using 0 means "keep aspect".
   if ! cwebp -q "$QUALITY" -m 6 -resize "$MAX_PX" 0 "$in_path" -o "$tmp_out" >/dev/null 2>&1; then
-    echo "[fail] cwebp failed: $in_path" >&2
-    rm -f "$tmp_out"
-    failed=$((failed+1))
-    continue
+    # Fallback: some inputs (notably HEIC/HEIF, or mislabeled files) may not be readable by cwebp.
+    # Convert to a temporary PNG via sips and retry.
+    tmp_png="${tmp_out}.src.png"
+    rm -f "$tmp_png"
+    if sips -s format png "$in_path" --out "$tmp_png" >/dev/null 2>&1; then
+      if ! cwebp -q "$QUALITY" -m 6 -resize "$MAX_PX" 0 "$tmp_png" -o "$tmp_out" >/dev/null 2>&1; then
+        echo "[fail] cwebp failed after sips fallback: $in_path" >&2
+        rm -f "$tmp_png" "$tmp_out"
+        failed=$((failed+1))
+        continue
+      fi
+      rm -f "$tmp_png"
+    else
+      echo "[fail] cwebp failed and sips fallback failed: $in_path" >&2
+      rm -f "$tmp_png" "$tmp_out"
+      failed=$((failed+1))
+      continue
+    fi
   fi
 
   in_size="$(file_size "$in_path")"

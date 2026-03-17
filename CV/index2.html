@@ -24,7 +24,7 @@
 
       --max: 1080px;
       --photo-h: 140px;
-      --photo-max-w: 60%;
+      --photo-max-w: 50%;
       --photo-min-w: 160px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
@@ -1161,6 +1161,18 @@
         const meta = h("div", "meta");
         for(const t of p.stack || []){ meta.appendChild(h("span", "tag", t)); }
         bodyRight.appendChild(meta);
+
+        if(Array.isArray(p.result) && p.result.length){
+          const resultHead = h("b", "", p.resultTitle || "成果");
+          resultHead.style.display = "block";
+          resultHead.style.marginTop = "12px";
+          bodyRight.appendChild(resultHead);
+
+          const ul = h("ul", "list");
+          ul.style.marginTop = "8px";
+          for(const li of p.result){ ul.appendChild(h("li", "", li)); }
+          bodyRight.appendChild(ul);
+        }
 
         body.appendChild(bodyLeft);
         body.appendChild(bodyRight);

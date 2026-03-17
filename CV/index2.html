@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="color-scheme" content="light dark" />
-  <title>周圣业｜网页版简历</title>
+  <title></title>
   <style>
     /* ====== Design Tokens ====== */
     :root{
@@ -23,6 +23,7 @@
       --warn:#f59e0b;
 
       --max: 1080px;
+      --photo-h: 140px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
               Arial, "Noto Sans", "Liberation Sans", "PingFang SC", "Hiragino Sans GB",
@@ -86,6 +87,14 @@
       justify-content:space-between;
       gap: 14px;
       padding: 12px 0;
+    }
+
+    /* Small screens: move nav to next row */
+    @media (max-width: 740px){
+      .topbar-inner{ flex-wrap: wrap; }
+      .brand{ min-width: auto; order: 1; }
+      .actions{ min-width: auto; order: 2; }
+      .nav{ width: 100%; order: 3; justify-content: center; }
     }
 
     .brand{
@@ -165,6 +174,18 @@
       box-shadow: var(--shadow);
       overflow:hidden;
       position: relative;
+    }
+
+    /* Subtle hover for non-click modules (less than projects) */
+    .hero, .card, .contact-card{
+      transition: transform .22s cubic-bezier(.18,1.08,.2,1), border-color .18s ease;
+      transform-origin: center top;
+    }
+    @media (hover: hover){
+      .hero:hover, .card:hover, .contact-card:hover{
+        transform: translateY(-1px);
+        border-color: rgba(124,92,255,.22);
+      }
     }
     .hero::before{
       content:"";
@@ -277,6 +298,20 @@
     }
     [data-theme="light"] .card{ box-shadow: 0 10px 30px rgba(0,0,0,.08); }
 
+    /* ====== Projects list ====== */
+    .projects-grid{ display:block; }
+
+    /* Hover cue (subtle, no scale/translate to avoid layout "nudge") */
+    .project{
+      transition: border-color .22s ease, background .22s ease;
+    }
+    @media (hover: hover){
+      .project:hover{
+        border-color: rgba(124,92,255,.35);
+        background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+      }
+    }
+
     .list{
       margin: 10px 0 0 0;
       padding-left: 18px;
@@ -291,6 +326,10 @@
       gap: 8px;
       margin-top: 10px;
     }
+    .meta .meta-break{
+      flex-basis: 100%;
+      height: 0;
+    }
     .tag{
       font-size: 12px;
       padding: 5px 8px;
@@ -302,6 +341,10 @@
     [data-theme="light"] .tag{ background: rgba(255,255,255,.65); }
 
     /* ====== Projects (collapsible) ====== */
+    .projects-grid{ display:block; }
+    .projects-grid .project{ margin-bottom: 14px; }
+    .projects-grid .project:last-child{ margin-bottom: 0; }
+
     .project{
       border-radius: calc(var(--radius) + 2px);
       border: 1px solid var(--line);
@@ -314,21 +357,69 @@
       cursor:pointer;
       padding: 16px;
       display:flex;
-      gap: 14px;
       align-items:flex-start;
+      justify-content:space-between;
+      gap: 16px;
+      user-select:none;
+      position: relative;
     }
     summary::-webkit-details-marker{ display:none; }
 
+    /* Hover hint: "点击展开" (no layout shift; overlay) */
+    summary::after{
+      content: var(--hint-open, "点击展开");
+      position: absolute;
+      left: 16px;
+      bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: var(--card2);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .14s ease, transform .14s ease;
+      pointer-events: none;
+      z-index: 2;
+      white-space: nowrap;
+    }
+    @media (hover: hover){
+      details:not([open]):hover > summary::after{
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    details:not([open]) > summary:focus-visible::after{
+      opacity: 1;
+      transform: translateY(0);
+    }
+    details[open] > summary::after{ content: ""; }
+
+    /* Small screens: place hint where it won't push content; allow slight overlay */
+    @media (max-width: 900px){
+      summary::after{
+        left: auto;
+        bottom: auto;
+        right: 12px;
+        top: 12px;
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-size: 12.5px;
+      }
+    }
+
     .proj-left{
       flex: 1 1 auto;
-      min-width: 220px;
+      min-width: 0;
     }
     .proj-title{
       display:flex;
-      flex-wrap:wrap;
+      gap: 8px;
       align-items:center;
-      gap: 8px 10px;
-      margin:0 0 6px 0;
+      flex-wrap:wrap;
+      margin:0;
     }
     .proj-title b{
       font-size: 14.5px;
@@ -341,23 +432,28 @@
       padding: 4px 8px;
       border-radius: 999px;
       background: rgba(0,0,0,.10);
+      white-space: nowrap;
     }
     [data-theme="light"] .proj-title .role{ background: rgba(255,255,255,.65); }
     .proj-sub{
+      margin: 6px 0 0;
       color: var(--muted);
       font-size: 12.5px;
-      margin:0;
       display:flex;
       gap: 10px;
       flex-wrap:wrap;
     }
     .proj-sub span{ display:inline-flex; align-items:center; gap: 6px; }
 
-    /* Photo placeholder */
+    /* Photo placeholder (no forced aspect ratio; images keep their real proportions) */
     .photo{
-      width: 240px;
-      max-width: 36vw;
-      aspect-ratio: 16 / 10;
+      /* 预览高度优先级：局部（单卡片）> 项目区统一 > 全局 token */
+      --photo-h-cur: var(--photo-h-local, var(--photo-h-project, var(--photo-h)));
+      /* 不用 vw：避免窗口变窄但卡片宽度不变时图片区也跟着缩 */
+      /* 让图片决定理想宽度，但最大宽度受 summary/卡片约束 */
+      max-width: 70%;
+      min-width: 220px;
+      min-height: calc(var(--photo-h-cur, var(--photo-h)) + 20px);
       border-radius: 14px;
       border: 1px dashed rgba(255,255,255,.28);
       background:
@@ -366,7 +462,11 @@
         rgba(0,0,0,.16);
       position: relative;
       overflow:hidden;
-      flex: 0 0 auto;
+      flex: 0 1 auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 10px;
     }
     [data-theme="light"] .photo{
       border: 1px dashed rgba(0,0,0,.20);
@@ -375,12 +475,32 @@
         radial-gradient(180px 120px at 70% 30%, rgba(34,197,94,.16), transparent 65%),
         rgba(255,255,255,.65);
     }
-    .photo img{
-      width:100%;
-      height:100%;
-      object-fit: cover;
-      display:none; /* 默认隐藏：你添加图片后把 display 改为 block 或用JS自动显示 */
+
+    .photo .photo-strip{
+      max-width: 100%;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 5px;
+      overflow: hidden; /* 折叠态：单行预览，多余图片不显示 */
     }
+    .photo img{
+      height: var(--photo-h-cur, var(--photo-h));
+      width: auto;
+      object-fit: contain;
+      border-radius: 10px;
+      display:none; /* 默认隐藏：部署后用JS HEAD探测显示 */
+      cursor: zoom-in;
+      flex: 0 0 auto;
+      max-width: 100%;
+    }
+    @media (max-width: 900px){
+      summary{ flex-direction: column; }
+      .photo{ width: 100%; max-width: 100%; }
+    }
+
+    /* .photo theme + img styles moved above */
     .photo .ph{
       position:absolute;
       inset:0;
@@ -413,15 +533,59 @@
       background: rgba(255,255,255,.45);
     }
 
+    /* 折叠态放不下时：展开后把图片移到正文顶部，summary 里的预览隐藏（避免重复） */
+    details.has-overflow[open] summary .photo{ display:none; }
+
+    .proj-gallery{
+      grid-column: 1 / -1;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.08);
+      padding: 10px;
+    }
+    [data-theme="light"] .proj-gallery{
+      background: rgba(255,255,255,.55);
+    }
+    .proj-gallery .photo-strip{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      justify-content:flex-start;
+      gap: 10px;
+    }
+    .proj-gallery img{
+      height: var(--photo-h);
+      width: auto;
+      object-fit: contain;
+      border-radius: 10px;
+      display:block;
+      cursor: zoom-in;
+    }
+
     .proj-body{
       padding: 14px 16px 16px;
       display:grid;
       grid-template-columns: 1.1fr .9fr;
       gap: 14px;
     }
+    details[open] .proj-body{
+      animation: body-fade 200ms ease;
+    }
     @media (max-width: 900px){
       .proj-body{ grid-template-columns: 1fr; }
       .photo{ width: 100%; max-width: 100%; }
+      .photo{ justify-content: center; }
+      .photo .photo-strip{ justify-content: center; }
+    }
+
+    @keyframes body-fade{
+      0%{ opacity: 0; }
+      100%{ opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .project{ transition: none !important; }
+      details[open] .proj-body{ animation: none !important; }
     }
     .hint{
       margin-top: 10px;
@@ -460,6 +624,7 @@
       }
       .photo{ border-color:#bbb !important; background:#fff !important; }
       a{ text-decoration: none; }
+      .projects-grid{ display: block !important; }
     }
   </style>
 </head>
@@ -471,23 +636,17 @@
       <div class="brand">
         <div class="avatar" aria-hidden="true"></div>
         <div class="brand-title">
-          <b>周圣业｜网页版简历</b>
-          <span>Microelectronics / FPGA / CV</span>
+          <b id="brandTitle"></b>
+          <span id="brandSubtitle"></span>
         </div>
       </div>
 
-      <nav class="nav" aria-label="站内导航">
-        <a class="pill" href="#about">概览</a>
-        <a class="pill" href="#edu">教育</a>
-        <a class="pill" href="#skills">技能</a>
-        <a class="pill" href="#projects">项目</a>
-        <a class="pill" href="#honors">成果&获奖</a>
-      </nav>
+      <nav class="nav" id="nav" aria-label="站内导航"></nav>
 
       <div class="actions">
-        <button class="btn secondary" id="btnTheme" type="button" title="切换主题">主题</button>
-        <button class="btn" type="button" onclick="window.print()" title="打印 / 导出 PDF">导出PDF</button>
-        <button class="btn primary" id="btnCopy" type="button" title="复制联系方式">复制联系</button>
+        <button class="btn secondary" id="btnTheme" type="button"></button>
+        <button class="btn" id="btnExport" type="button" onclick="window.print()"></button>
+        <button class="btn primary" id="btnCopy" type="button"></button>
       </div>
     </div>
   </div>
@@ -497,37 +656,18 @@
     <section id="about" class="hero">
       <div class="hero-grid">
         <div>
-          <h1 class="h-title">周圣业</h1>
-          <p class="h-sub">
-            电子科技大学｜微电子科学与工程（在读） · 方向：FPGA/嵌入式系统/计算机视觉
-          </p>
+          <h1 class="h-title" id="aboutName"></h1>
+          <p class="h-sub" id="aboutSubtitle"></p>
 
-          <div class="chips">
-            <span class="chip">成绩：2024-2025 学年 23/152</span>
-            <span class="chip">预估保研评定：前 10%</span>
-            <span class="chip">擅长：Verilog / OpenCV / 嵌入式 / Web</span>
-          </div>
-
-          <div class="hint">
-            你可以把这里当作“个人亮点摘要区”。建议后续补充：目标岗位、研究兴趣、代表性成果（论文/开源/博客链接）、个人作品集入口。
-          </div>
+          <div class="chips" id="aboutChips"></div>
         </div>
 
         <aside class="contact-card" aria-label="联系方式">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
-            <b style="font-size:14px;">联系方式</b>
-            <span style="font-size:12px;color:var(--muted);">一键复制更方便</span>
+            <b style="font-size:14px;" id="contactTitle"></b>
+            <span style="font-size:12px;color:var(--muted);" id="contactHint"></span>
           </div>
-          <div class="kv" id="contactKv">
-            <div>地点</div><b>四川省成都市郫都区</b>
-            <div>手机</div><code id="phone">13152170139</code>
-            <div>邮箱</div><code id="email">2023190904022@std.uestc.edu.cn</code>
-            <div>学校</div><b>电子科技大学</b>
-            <div>专业</div><b>微电子科学与工程</b>
-          </div>
-          <div class="hint" style="margin-top:12px;">
-            建议增加：GitHub / 个人主页 / 作品集 / 竞赛证书或专利链接（若可公开）。
-          </div>
+          <div class="kv" id="contactKv"></div>
         </aside>
       </div>
     </section>
@@ -535,370 +675,45 @@
     <!-- ===== Education & Coursework ===== -->
     <section id="edu">
       <div class="section-title">
-        <h2>教育背景</h2>
-        <p>建议：用“量化信息 + 关键课程”增强可信度</p>
+        <h2 id="eduTitle"></h2>
+        <p id="eduDesc"></p>
       </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <b>电子科技大学｜微电子科学与工程</b>
-          <ul class="list">
-            <li>成绩排名：2024-2025 学年 23 / 152</li>
-            <li>预估保研资格评定排名：前 10%</li>
-          </ul>
-          <div class="meta">
-            <span class="tag">大学物理I（97）</span>
-            <span class="tag">编程导论（95）</span>
-            <span class="tag">微电子系统（99）</span>
-            <span class="tag">微积分II（90）</span>
-            <span class="tag">数字逻辑设计（94）</span>
-            <span class="tag">电路分析与设计（92）</span>
-            <span class="tag">电子器件（92）</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <b>学生工作 / 组织经历</b>
-          <ul class="list">
-            <li>班级宣传委员</li>
-            <li>学院社团工作站部长</li>
-            <li>科协副部长</li>
-            <li>党委影像工作室成员</li>
-            <li>课程助教</li>
-          </ul>
-          <div class="hint">
-            强烈建议补充“你做了什么 + 结果是什么”：例如活动规模、传播数据、制度建设、组织协作、培训带教等。
-          </div>
-        </div>
-      </div>
+      <div class="grid-2" id="eduGrid"></div>
     </section>
 
     <!-- ===== Skills ===== -->
     <section id="skills">
       <div class="section-title">
-        <h2>技能能力</h2>
-        <p>建议：按“方向”分组（FPGA / CV / 工程化 / 其他）更专业</p>
+        <h2 id="skillsTitle"></h2>
+        <p id="skillsDesc"></p>
       </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <b>核心技能</b>
-          <ul class="list">
-            <li>硬件描述 / 数字设计：Verilog HDL</li>
-            <li>计算机视觉：OpenCV 图像处理（Python / C++）</li>
-            <li>嵌入式：相机采集链路、HDMI 显示链路、资源受限优化</li>
-          </ul>
-          <div class="meta">
-            <span class="tag">Verilog</span>
-            <span class="tag">OpenCV</span>
-            <span class="tag">FPGA</span>
-            <span class="tag">HDMI</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <b>综合能力</b>
-          <ul class="list">
-            <li>3D 建模、视频制作、网页制作</li>
-            <li>项目管理：队长/负责人经历（任务拆解、进度推进、交付验收）</li>
-          </ul>
-          <div class="hint">
-            你要做“更丰富”的网页版：建议把作品（演示视频、论文/报告、GitHub 仓库、比赛证书）都以链接形式挂上去。
-          </div>
-        </div>
-      </div>
+      <div class="grid-2" id="skillsGrid"></div>
     </section>
 
     <!-- ===== Projects ===== -->
     <section id="projects">
       <div class="section-title">
-        <h2>项目经历</h2>
-        <p>每个项目可折叠；右侧为图片占位（后续替换）</p>
+        <h2 id="projectsTitle"></h2>
+        <p id="projectsDesc"></p>
       </div>
 
-      <!-- Project 1 -->
-      <div class="project" style="margin-bottom:14px;">
-        <details open>
-          <summary>
-            <div class="proj-left">
-              <div class="proj-title">
-                <b>图像处理算法的研究与实现</b>
-                <span class="role">项目负责人</span>
-              </div>
-              <p class="proj-sub">
-                <span>🗓️ 2024.01 – 2024.11</span>
-                <span>🧠 OpenCV / 特征点 / 拼接</span>
-              </p>
-            </div>
-
-            <div class="photo" aria-label="项目图片占位">
-              <!-- 你后续把图片放到 assets/project-1.jpg，然后把 img 的 display 改为 block（或看下方JS自动显示） -->
-              <img src="assets/project-1.jpg" alt="图像处理算法项目展示图" />
-              <div class="ph">
-                <b>项目图片占位</b>
-                <div>建议放：效果对比图 / 拼接结果 / 展示海报</div>
-                <code>assets/project-1.jpg</code>
-              </div>
-            </div>
-          </summary>
-
-          <div class="proj-body">
-            <div>
-              <b>工作内容</b>
-              <ul class="list">
-                <li>基于 Python 与 C++ OpenCV 实现特征点检测、仿射/透视变换。</li>
-                <li>结合 SIFT 与 SURF 完成多图拼接。</li>
-              </ul>
-
-              <b style="display:block;margin-top:12px;">成果</b>
-              <ul class="list">
-                <li>项目结题，获评校级优秀项目。</li>
-                <li>在 2025 年新工科作品展展出。</li>
-              </ul>
-
-              <div class="hint">
-                可扩写点（建议你后面补）：拼接精度指标、速度优化、鲁棒性（旋转/光照/遮挡），以及你负责的具体模块（匹配、RANSAC、融合等）。
-              </div>
-            </div>
-
-            <div>
-              <b>技术栈 / 亮点（可继续补充）</b>
-              <div class="meta">
-                <span class="tag">Python</span>
-                <span class="tag">C++</span>
-                <span class="tag">OpenCV</span>
-                <span class="tag">SIFT</span>
-                <span class="tag">SURF</span>
-                <span class="tag">Homography</span>
-              </div>
-
-              <div class="hint">
-                如果你有：演示视频、项目报告、代码仓库链接——建议放在这里，HR/老师会更容易“点开验证”。
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <!-- Project 2 -->
-      <div class="project" style="margin-bottom:14px;">
-        <details>
-          <summary>
-            <div class="proj-left">
-              <div class="proj-title">
-                <b>基于易灵思 FPGA 的实时视频畸变校正</b>
-                <span class="role">队长</span>
-              </div>
-              <p class="proj-sub">
-                <span>🗓️ 2025.09 – 2025.12</span>
-                <span>⚙️ Ti60F225 / 相机采集 / HDMI 输出</span>
-              </p>
-            </div>
-
-            <div class="photo" aria-label="项目图片占位">
-              <img src="assets/project-2.jpg" alt="FPGA 畸变校正项目展示图" />
-              <div class="ph">
-                <b>项目图片占位</b>
-                <div>建议放：硬件平台照片 / HDMI 输出画面 / 框图</div>
-                <code>assets/project-2.jpg</code>
-              </div>
-            </div>
-          </summary>
-
-          <div class="proj-body">
-            <div>
-              <b>工作内容</b>
-              <ul class="list">
-                <li>在国产易灵思 Ti60F225 FPGA 平台完成相机采集与处理，并通过 HDMI 输出显示。</li>
-                <li>资源受限条件下采用动态行缓存策略，实现硬件级图像畸变校正。</li>
-              </ul>
-
-              <b style="display:block;margin-top:12px;">成果</b>
-              <ul class="list">
-                <li>嵌入式芯片与系统设计竞赛（FPGA 创新设计赛道）国家级一等奖。</li>
-              </ul>
-
-              <div class="hint">
-                可扩写点：吞吐/帧率、时序/资源占用（LUT/BRAM/DSP）、畸变模型（桶形/枕形）、插值方案、流水线设计。
-              </div>
-            </div>
-
-            <div>
-              <b>技术栈 / 亮点（可继续补充）</b>
-              <div class="meta">
-                <span class="tag">FPGA</span>
-                <span class="tag">Verilog</span>
-                <span class="tag">Line Buffer</span>
-                <span class="tag">HDMI</span>
-                <span class="tag">Camera ISP</span>
-              </div>
-
-              <div class="hint">
-                建议加一张“效果对比图”（校正前/后同一帧），非常加分。
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <!-- Project 3 -->
-      <div class="project" style="margin-bottom:14px;">
-        <details>
-          <summary>
-            <div class="proj-left">
-              <div class="proj-title">
-                <b>基于 FPGA 的高精度低功耗智能声音事件检测系统</b>
-                <span class="role">成员</span>
-              </div>
-              <p class="proj-sub">
-                <span>🗓️ 2024.11 – 2025.10</span>
-                <span>🧩 Zynq UltraScale+ ZCU102 / DPU 部署</span>
-              </p>
-            </div>
-
-            <div class="photo" aria-label="项目图片占位">
-              <img src="assets/project-3.jpg" alt="声音事件检测系统展示图" />
-              <div class="ph">
-                <b>项目图片占位</b>
-                <div>建议放：系统框图 / 端到端流程 / 推理界面</div>
-                <code>assets/project-3.jpg</code>
-              </div>
-            </div>
-          </summary>
-
-          <div class="proj-body">
-            <div>
-              <b>工作内容</b>
-              <ul class="list">
-                <li>在 Zynq UltraScale+ ZCU102 的 DPU 上进行部署，实现多种声音事件检测。</li>
-              </ul>
-
-              <div class="hint">
-                可扩写点：模型结构（CNN/CRNN/Transformer?）、量化策略、DPU 编译流程、延迟/功耗对比、数据集与指标（mAP/F1/Top-1）。
-              </div>
-            </div>
-
-            <div>
-              <b>技术栈 / 亮点（可继续补充）</b>
-              <div class="meta">
-                <span class="tag">Zynq</span>
-                <span class="tag">DPU</span>
-                <span class="tag">Edge AI</span>
-                <span class="tag">Quantization</span>
-              </div>
-              <div class="hint">
-                如果你有实验曲线、功耗测试、端到端延迟统计——都可以放成图片/图表，网页呈现效果很好。
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <!-- Project 4 -->
-      <div class="project">
-        <details>
-          <summary>
-            <div class="proj-left">
-              <div class="proj-title">
-                <b>简易 16bit RISC CPU 设计</b>
-                <span class="role">队长</span>
-              </div>
-              <p class="proj-sub">
-                <span>🗓️ 2025.09 – 2025.10</span>
-                <span>🏗️ 哈佛结构 / ROM-RAM-CPU 集成验证</span>
-              </p>
-            </div>
-
-            <div class="photo" aria-label="项目图片占位">
-              <img src="assets/project-4.jpg" alt="16bit RISC CPU 项目展示图" />
-              <div class="ph">
-                <b>项目图片占位</b>
-                <div>建议放：CPU 框图 / 流水/控制信号波形 / 板上演示</div>
-                <code>assets/project-4.jpg</code>
-              </div>
-            </div>
-          </summary>
-
-          <div class="proj-body">
-            <div>
-              <b>工作内容</b>
-              <ul class="list">
-                <li>设计可通过 16 位拨码开关输入、LED/七段数码管输出的简易 CPU 系统。</li>
-                <li>采用哈佛结构，集成 ROM / RAM / CPU / 输出控制。</li>
-                <li>CPU 内部完成 Fetch、控制单元与数据通路设计并通过集成验证。</li>
-              </ul>
-
-              <div class="hint">
-                可扩写点：指令集（ISA）、时序（单周期/多周期）、控制方式（硬布线/微码）、流水/冒险处理（如有）、测试程序与覆盖率。
-              </div>
-            </div>
-
-            <div>
-              <b>技术栈 / 亮点（可继续补充）</b>
-              <div class="meta">
-                <span class="tag">Verilog</span>
-                <span class="tag">Harvard</span>
-                <span class="tag">Control Unit</span>
-                <span class="tag">Datapath</span>
-                <span class="tag">Integration Test</span>
-              </div>
-              <div class="hint">
-                如果你能贴一张“指令执行波形图”和“板上演示照片”，这个项目会非常有说服力。
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <div class="hint" style="margin-top:14px;">
-        小技巧：把每个项目的图片统一裁成 <span class="kbd">16:10</span> 或 <span class="kbd">16:9</span>，视觉会更高级；并在图片下方加 1 行说明（如“校正前/后对比”）。
-      </div>
+      <div class="projects-grid" id="projectsGrid"></div>
     </section>
 
     <!-- ===== Honors ===== -->
     <section id="honors">
       <div class="section-title">
-        <h2>成果及获奖情况</h2>
-        <p>建议：能公开就加链接（专利号/证书/作品展页面）</p>
+        <h2 id="honorsTitle"></h2>
+        <p id="honorsDesc"></p>
       </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <b>专利</b>
-          <ul class="list">
-            <li>《一种基于特征点分析的运动检测的方法及其装置》——发明专利，已授权</li>
-          </ul>
-          <div class="hint">可补充：专利号、授权公告日、你在其中的贡献（第一发明人/参与人）。</div>
-        </div>
-
-        <div class="card">
-          <b>竞赛</b>
-          <ul class="list">
-            <li>嵌入式芯片与系统设计竞赛（FPGA 创新设计赛道）：国家级一等奖（企业奖候选）</li>
-            <li>全国大学生电子设计竞赛（四川赛区）：二等奖（2024），二等奖（2025）</li>
-            <li>盟升杯电子设计竞赛：高年级组一等奖</li>
-            <li>电子科技大学创格杯电子设计竞赛：一等奖（第一名）</li>
-            <li>校内课外创新实践项目：中期/结题均优秀，参加新工科作品展</li>
-            <li>大学生创新创业训练项目：中期/结题均优秀</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:14px;">
-        <b>奖学金</b>
-        <div class="meta" style="margin-top:10px;">
-          <span class="tag">2025 校级优秀学生奖学金</span>
-          <span class="tag">2025 院级学业奖学金</span>
-          <span class="tag">2025 院级瓦特科技创新奖学金（学院前1%）</span>
-          <span class="tag">2024 校级专项奖学金</span>
-          <span class="tag">2024 院级卓越领导力奖学金（学院前1%）</span>
-          <span class="tag">2024 院级科技创新奖学金（学院前5%）</span>
-        </div>
-      </div>
+      <div id="honorsWrap"></div>
     </section>
 
     <div class="foot">
-      © <span id="year"></span> 周圣业 · 本页面支持打印导出 PDF · 建议在项目区补充图片/链接/量化指标，信息密度会更强
+      © <span id="year"></span> <span id="footerText"></span>
     </div>
   </main>
 
@@ -918,34 +733,678 @@
       localStorage.setItem("theme", next);
     });
 
-    // ===== Copy contact =====
-    document.getElementById("btnCopy").addEventListener("click", async () => {
-      const phone = document.getElementById("phone").innerText.trim();
-      const email = document.getElementById("email").innerText.trim();
-      const text = `手机：${phone}\n邮箱：${email}`;
-      try{
-        await navigator.clipboard.writeText(text);
-        toast("已复制联系方式 ✅");
-      }catch(e){
-        toast("复制失败：浏览器不支持剪贴板权限");
-      }
-    });
+    // ===== Content (single source of truth) =====
+    // 所有页面可见文字统一存放在 CV/content.json
+    let CONTENT = null;
+    let TOAST_COPY_OK = "已复制联系方式";
+    let TOAST_COPY_FAIL = "复制失败：浏览器不支持剪贴板权限";
 
-    // ===== Optional: auto-show images if file exists (best effort) =====
-    // 浏览器无法直接判断本地文件是否存在；部署后可用 fetch 尝试。
-    async function tryShow(img){
-      const src = img.getAttribute("src");
-      if(!src) return;
-      try{
-        const r = await fetch(src, { method:"HEAD", cache:"no-store" });
-        if(r.ok){
-          img.style.display = "block";
-          const ph = img.parentElement.querySelector(".ph");
-          if(ph) ph.style.display = "none";
-        }
-      }catch(_){}
+    function cssString(s){
+      const t = String(s ?? "");
+      return `"${t.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
     }
-    document.querySelectorAll(".photo img").forEach(tryShow);
+
+    function clearChildren(node){
+      while(node && node.firstChild) node.removeChild(node.firstChild);
+    }
+
+    function setText(id, text){
+      const node = document.getElementById(id);
+      if(node) node.textContent = text ?? "";
+    }
+
+    function h(tag, className, text){
+      const node = document.createElement(tag);
+      if(className) node.className = className;
+      if(text !== undefined && text !== null) node.textContent = text;
+      return node;
+    }
+
+    async function loadContent(){
+      const url = new URL("content.json", window.location.href);
+      const r = await fetch(url.toString(), { cache: "no-store" });
+      if(!r.ok) throw new Error(`Failed to load content.json: ${r.status}`);
+      return await r.json();
+    }
+
+    function renderNav(nav){
+      const navEl = document.getElementById("nav");
+      if(!navEl) return;
+      clearChildren(navEl);
+      for(const item of nav || []){
+        const a = h("a", "pill", item.label);
+        a.href = item.href;
+        navEl.appendChild(a);
+      }
+    }
+
+    function renderActions(actions){
+      const btnTheme = document.getElementById("btnTheme");
+      const btnExport = document.getElementById("btnExport");
+      const btnCopy = document.getElementById("btnCopy");
+      if(btnTheme){ btnTheme.textContent = actions?.theme?.label ?? ""; btnTheme.title = actions?.theme?.title ?? ""; }
+      if(btnExport){ btnExport.textContent = actions?.exportPdf?.label ?? ""; btnExport.title = actions?.exportPdf?.title ?? ""; }
+      if(btnCopy){ btnCopy.textContent = actions?.copyContact?.label ?? ""; btnCopy.title = actions?.copyContact?.title ?? ""; }
+    }
+
+    function renderAbout(about){
+      setText("aboutName", about?.name ?? "");
+      setText("aboutSubtitle", about?.subtitle ?? "");
+
+      const chipsEl = document.getElementById("aboutChips");
+      if(chipsEl){
+        clearChildren(chipsEl);
+        for(const c of about?.chips || []){
+          chipsEl.appendChild(h("span", "chip", c));
+        }
+      }
+    }
+
+    function renderContact(contact){
+      setText("contactTitle", contact?.title ?? "");
+      setText("contactHint", contact?.hint ?? "");
+
+      const kv = document.getElementById("contactKv");
+      if(!kv) return;
+      clearChildren(kv);
+
+      for(const item of contact?.items || []){
+        kv.appendChild(h("div", "", item.k ?? ""));
+
+        if(item.type === "code"){
+          const code = h("code", "", item.v ?? "");
+          if(item.id) code.id = item.id;
+          kv.appendChild(code);
+          continue;
+        }
+
+        if(item.type === "linkCode"){
+          const a = document.createElement("a");
+          a.href = item.href || "#";
+          if(/^https?:/i.test(a.href)){
+            a.target = "_blank";
+            a.rel = "noreferrer";
+          }
+          const code = h("code", "", item.v ?? "");
+          if(item.id) code.id = item.id;
+          a.appendChild(code);
+          kv.appendChild(a);
+          continue;
+        }
+
+        kv.appendChild(h("b", "", item.v ?? ""));
+      }
+    }
+
+    function renderCards(gridId, cards){
+      const grid = document.getElementById(gridId);
+      if(!grid) return;
+      clearChildren(grid);
+
+      for(const card of cards || []){
+        const cardEl = h("div", "card");
+        cardEl.appendChild(h("b", "", card.title ?? ""));
+
+        if(card.list && card.list.length){
+          const ul = h("ul", "list");
+          for(const li of card.list){ ul.appendChild(h("li", "", li)); }
+          cardEl.appendChild(ul);
+        }
+
+        if(card.tags && card.tags.length){
+          const meta = h("div", "meta");
+          for(const t of card.tags){ meta.appendChild(h("span", "tag", t)); }
+          cardEl.appendChild(meta);
+        }
+
+        grid.appendChild(cardEl);
+      }
+    }
+
+    function renderProjects(cfg){
+      const grid = document.getElementById("projectsGrid");
+      if(!grid) return;
+      clearChildren(grid);
+
+      const photoCfg = cfg?.photo || {};
+      const placeholderTitle = photoCfg.placeholderTitle ?? "";
+      const pathTpls = photoCfg.placeholderPaths || [];
+      const placeholders = photoCfg.placeholders || {};
+
+      for(const p of cfg?.items || []){
+        const wrap = h("div", "project");
+        const details = document.createElement("details");
+
+        const summary = document.createElement("summary");
+
+        const left = h("div", "proj-left");
+        const titleRow = h("div", "proj-title");
+        titleRow.appendChild(h("b", "", p.title ?? ""));
+        titleRow.appendChild(h("span", "role", p.role ?? ""));
+        left.appendChild(titleRow);
+
+        const sub = h("p", "proj-sub");
+        for(const s of p.sub || []){
+          sub.appendChild(h("span", "", s));
+        }
+        left.appendChild(sub);
+
+        const photo = h("div", "photo");
+        photo.setAttribute("aria-label", "项目图片");
+        if(p.imageSeed) photo.dataset.seed = p.imageSeed;
+
+        const strip = h("div", "photo-strip");
+        photo.appendChild(strip);
+
+        const ph = h("div", "ph");
+        ph.appendChild(h("b", "", placeholderTitle));
+        const phKey = `p${p.id}`;
+        ph.appendChild(h("div", "", placeholders[phKey] ?? ""));
+        for(const tpl of pathTpls){
+          const path = String(tpl).split("{{id}}").join(p.id ?? "");
+          ph.appendChild(h("code", "", path));
+        }
+        photo.appendChild(ph);
+
+        summary.appendChild(left);
+        summary.appendChild(photo);
+
+        const body = h("div", "proj-body");
+
+        const bodyLeft = document.createElement("div");
+        bodyLeft.appendChild(h("b", "", p.contentTitle ?? ""));
+        if(p.content && p.content.length){
+          const ul = h("ul", "list");
+          for(const li of p.content){ ul.appendChild(h("li", "", li)); }
+          bodyLeft.appendChild(ul);
+        }
+
+        const workTitle = h("b", "", p.workTitle ?? "");
+        workTitle.style.display = "block";
+        workTitle.style.marginTop = "12px";
+        bodyLeft.appendChild(workTitle);
+        if(p.work && p.work.length){
+          const ul = h("ul", "list");
+          for(const li of p.work){ ul.appendChild(h("li", "", li)); }
+          bodyLeft.appendChild(ul);
+        }
+
+        const bodyRight = document.createElement("div");
+        bodyRight.appendChild(h("b", "", p.stackTitle ?? ""));
+        const meta = h("div", "meta");
+        for(const t of p.stack || []){ meta.appendChild(h("span", "tag", t)); }
+        bodyRight.appendChild(meta);
+
+        body.appendChild(bodyLeft);
+        body.appendChild(bodyRight);
+
+        details.appendChild(summary);
+        details.appendChild(body);
+        wrap.appendChild(details);
+        grid.appendChild(wrap);
+      }
+    }
+
+    function renderHonors(cfg){
+      const wrap = document.getElementById("honorsWrap");
+      if(!wrap) return;
+      clearChildren(wrap);
+
+      const card1 = h("div", "card");
+      card1.appendChild(h("b", "", cfg?.patent?.title ?? ""));
+      const ul1 = h("ul", "list");
+      for(const li of cfg?.patent?.list || []) ul1.appendChild(h("li", "", li));
+      card1.appendChild(ul1);
+      wrap.appendChild(card1);
+
+      const card2 = h("div", "card");
+      card2.style.marginTop = "14px";
+      card2.appendChild(h("b", "", cfg?.scholarship?.title ?? ""));
+      const meta = h("div", "meta");
+      meta.style.marginTop = "10px";
+      for(const t of cfg?.scholarship?.tags || []){
+        if(t === "__BR__"){
+          meta.appendChild(h("span", "meta-break", ""));
+          continue;
+        }
+        meta.appendChild(h("span", "tag", t));
+      }
+      card2.appendChild(meta);
+      wrap.appendChild(card2);
+
+      const card3 = h("div", "card");
+      card3.style.marginTop = "14px";
+      card3.appendChild(h("b", "", cfg?.contest?.title ?? ""));
+      const ul3 = h("ul", "list");
+      for(const li of cfg?.contest?.list || []) ul3.appendChild(h("li", "", li));
+      card3.appendChild(ul3);
+      wrap.appendChild(card3);
+    }
+
+    function applyContent(content){
+      CONTENT = content;
+      document.title = content?.title ?? "";
+
+      setText("brandTitle", content?.brand?.title ?? "");
+      setText("brandSubtitle", content?.brand?.subtitle ?? "");
+      renderNav(content?.nav);
+      renderActions(content?.actions);
+
+      document.documentElement.style.setProperty("--hint-open", cssString(content?.hint?.expand ?? "点击展开"));
+
+      renderAbout(content?.about);
+      renderContact(content?.about?.contact);
+
+      setText("eduTitle", content?.sections?.edu?.title ?? "");
+      setText("eduDesc", content?.sections?.edu?.desc ?? "");
+      renderCards("eduGrid", content?.sections?.edu?.cards);
+
+      setText("skillsTitle", content?.sections?.skills?.title ?? "");
+      setText("skillsDesc", content?.sections?.skills?.desc ?? "");
+      renderCards("skillsGrid", content?.sections?.skills?.cards);
+
+      setText("projectsTitle", content?.sections?.projects?.title ?? "");
+      setText("projectsDesc", content?.sections?.projects?.desc ?? "");
+      renderProjects(content?.sections?.projects);
+
+      setText("honorsTitle", content?.sections?.honors?.title ?? "");
+      setText("honorsDesc", content?.sections?.honors?.desc ?? "");
+      renderHonors(content?.sections?.honors);
+
+      setText("footerText", content?.footer ?? "");
+
+      TOAST_COPY_OK = content?.toast?.copyOk ?? TOAST_COPY_OK;
+      TOAST_COPY_FAIL = content?.toast?.copyFail ?? TOAST_COPY_FAIL;
+
+      const btnCopy = document.getElementById("btnCopy");
+      if(btnCopy){
+        btnCopy.onclick = async () => {
+          const phoneEl = document.getElementById("phone");
+          const emailEl = document.getElementById("email");
+          const websiteEl = document.getElementById("website");
+          const phone = phoneEl ? phoneEl.innerText.trim() : "";
+          const email = emailEl ? emailEl.innerText.trim() : "";
+          const website = websiteEl ? websiteEl.innerText.trim() : "";
+          const text = website ? `电话：${phone}\n邮箱：${email}\n个人网站：${website}` : `电话：${phone}\n邮箱：${email}`;
+          try{
+            await navigator.clipboard.writeText(text);
+            toast(TOAST_COPY_OK);
+          }catch(_){
+            toast(TOAST_COPY_FAIL);
+          }
+        };
+      }
+    }
+
+    // ===== Auto-load project images by naming convention =====
+    // 规则：同一个项目图片按 -a / -b / -c ... 命名。
+    // 你只要把文件放进 assets/ 并按规则命名，不需要再改 HTML。
+
+    const PROJECT_IMG_MAX = 6;
+    const PROJECT_IMG_LETTERS = ["a","b","c","d","e","f","g","h","i","j"]; // 够用；最终会按 MAX 截断
+    const PROJECT_IMG_EXTS = ["png","jpg","jpeg","webp","gif"]; // 常见格式
+
+    function parseSeedPathFromPhoto(photo){
+      // 最高优先：由内容渲染写入的 seed
+      const seedFromData = photo?.dataset?.seed;
+      if(seedFromData) return seedFromData;
+
+      // 优先：已有 img 的 src
+      const existing = photo.querySelector(".photo-strip img[src]");
+      const seed = existing ? existing.getAttribute("src") : null;
+      if(seed) return seed;
+
+      // 其次：占位区 code 里的路径
+      const code = photo.querySelector(".ph code");
+      const codeText = code ? code.textContent.trim() : "";
+      return codeText || null;
+    }
+
+    function parsePrefixAndExt(seed){
+      // 期望形如 assets/project-1-a.png
+      // 返回 { prefix: "assets/project-1-", ext: "png" }
+      if(!seed) return null;
+      const clean = seed.split("?")[0].split("#")[0];
+      const m = clean.match(/^(.*-)([a-zA-Z])\.(\w+)$/);
+      if(!m) return null;
+      return { prefix: m[1], ext: m[3].toLowerCase() };
+    }
+
+    async function headOk(url){
+      try{
+        const r = await fetch(url, { method: "HEAD", cache: "no-store" });
+        if(r.ok) return true;
+        // 有些服务对 HEAD 支持不完整，降级用 GET 探测
+        if(r.status === 405 || r.status === 501){
+          const r2 = await fetch(url, { method: "GET", cache: "no-store" });
+          return r2.ok;
+        }
+        return false;
+      }catch(_){
+        return false;
+      }
+    }
+
+    function setPlaceholderVisibility(photo){
+      const ph = photo.querySelector(".ph");
+      if(!ph) return;
+      const anyShown = Array.from(photo.querySelectorAll(".photo-strip img")).some(i => i.style.display === "block");
+      ph.style.display = anyShown ? "none" : "flex";
+    }
+
+    function setHasMedia(details, hasMedia){
+      if(!details) return;
+      details.classList.toggle("has-media", !!hasMedia);
+    }
+
+    function ensureImg(strip, src){
+      // strip 会在 autoLoadPhoto 中被清空，所以这里直接创建即可
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "项目图片";
+      img.style.display = "none";
+      enableImageZoom(img);
+      strip.appendChild(img);
+      return img;
+    }
+
+    function openImageInNewTab(src){
+      if(!src) return;
+      const a = document.createElement("a");
+      a.href = src;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function enableImageZoom(img){
+      if(!img) return;
+      img.title = img.title || "点击查看大图";
+      img.tabIndex = 0;
+
+      const open = (e) => {
+        // 在 summary 内点击图片时，避免触发 details 切换
+        if(e){
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        openImageInNewTab(img.currentSrc || img.src);
+      };
+
+      img.addEventListener("click", open);
+      img.addEventListener("keydown", (e) => {
+        if(e.key === "Enter" || e.key === " ") open(e);
+      });
+    }
+
+    let previewSyncPending = false;
+    function schedulePreviewClamp(_photo){
+      // 为了让四个项目图片区高度一致：任何一个 photo 需要重算时，都同步全体
+      if(previewSyncPending) return;
+      previewSyncPending = true;
+      requestAnimationFrame(() => {
+        previewSyncPending = false;
+        syncProjectPreviewHeightAndClamp();
+      });
+    }
+
+    function getProjectPhotos(){
+      return Array.from(document.querySelectorAll("#projectsGrid summary .photo"));
+    }
+
+    function computeUnifiedProjectPreviewHeight(photos){
+      const rootStyles = getComputedStyle(document.documentElement);
+      const tokenH = parseFloat(rootStyles.getPropertyValue("--photo-h")) || 140;
+      const minH = 96;
+      const step = 6;
+      const allowedOverflow = 10;
+
+      let unifiedH = Math.max(minH, tokenH);
+      let hasAny = false;
+
+      // 先清理：去掉旧的局部覆盖，确保测量基于同一套规则
+      for(const photo of photos){
+        photo.style.removeProperty("--photo-h-local");
+        const strip = photo.querySelector(".photo-strip");
+        if(!strip) continue;
+        for(const img of Array.from(strip.querySelectorAll("img"))){
+          if(img.dataset.found === "1") img.style.display = "block";
+        }
+      }
+
+      // 针对每个项目：找到“在不隐藏图片的情况下能放进一行”的最小高度
+      // 最终取所有项目里的最小值，作为统一高度（保证大家一致）
+      for(const photo of photos){
+        const strip = photo.querySelector(".photo-strip");
+        if(!strip) continue;
+        const found = Array.from(strip.querySelectorAll("img")).filter(img => img.dataset.found === "1");
+        if(found.length <= 1) continue;
+
+        const w = strip.clientWidth;
+        if(w <= 0) continue;
+
+        hasAny = true;
+        let curH = Math.max(minH, tokenH);
+        photo.style.setProperty("--photo-h-local", `${curH}px`);
+
+        let guard = 0;
+        while(strip.scrollWidth > strip.clientWidth + allowedOverflow && curH - step >= minH && guard++ < 50){
+          curH -= step;
+          photo.style.setProperty("--photo-h-local", `${curH}px`);
+        }
+
+        unifiedH = Math.min(unifiedH, curH);
+      }
+
+      // 如果没有任何需要测量的（比如都没图/都只有一张），就保持 tokenH
+      return hasAny ? unifiedH : Math.max(minH, tokenH);
+    }
+
+    function syncProjectPreviewHeightAndClamp(){
+      const grid = document.getElementById("projectsGrid");
+      if(!grid) return;
+
+      const photos = getProjectPhotos();
+      if(photos.length === 0) return;
+
+      const unifiedH = computeUnifiedProjectPreviewHeight(photos);
+      grid.style.setProperty("--photo-h-project", `${unifiedH}px`);
+
+      // 统一高度确定后：移除局部覆盖，让所有卡片使用同一个高度
+      for(const photo of photos){
+        photo.style.removeProperty("--photo-h-local");
+        clampPreviewToOneLine(photo);
+      }
+    }
+
+    function clampPreviewToOneLine(photo){
+      const strip = photo.querySelector(".photo-strip");
+      if(!strip) return;
+
+      const imgs = Array.from(strip.querySelectorAll("img"));
+      const found = imgs.filter(img => img.dataset.found === "1");
+      if(found.length <= 1){
+        const details = photo.closest("details");
+        if(details) details.classList.toggle("has-overflow", false);
+        return;
+      }
+
+      // 尽可能多显示：
+      // 1) 先把预览高度从默认值逐步缩小，争取把更多图片塞进一行
+      // 2) 如果缩到下限仍放不下，再从末尾开始隐藏
+      for(const img of found){ img.style.display = "block"; }
+      const allowedOverflow = 10; // 允许少量像素误差，避免过度隐藏
+
+      let hiddenCount = 0;
+      // strip 为 nowrap + overflow hidden；scrollWidth>clientWidth 说明放不下
+      // 用 allowedOverflow 余量抵消小数像素/取整误差，尽量不隐藏
+      while(strip.scrollWidth > strip.clientWidth + allowedOverflow && found.length - hiddenCount > 1){
+        const idx = found.length - 1 - hiddenCount;
+        found[idx].style.display = "none";
+        hiddenCount++;
+      }
+
+      const details = photo.closest("details");
+      if(details) details.classList.toggle("has-overflow", hiddenCount > 0);
+    }
+
+    function getAllSrcsFromPhoto(photo){
+      try{
+        const raw = photo.dataset.allSrcs || "[]";
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      }catch(_){
+        return [];
+      }
+    }
+
+    function removeGallery(details){
+      const gallery = details.querySelector(".proj-gallery");
+      if(gallery) gallery.remove();
+    }
+
+    function buildGallery(details){
+      removeGallery(details);
+      const photo = details.querySelector("summary .photo");
+      if(!photo) return;
+      const allSrcs = getAllSrcsFromPhoto(photo);
+      if(allSrcs.length === 0) return;
+
+      // 仅当折叠态放不下（发生溢出）时，展开后才把图片移到正文顶部
+      // 一旦需要移动：展示全部图片（不是只展示放不下的那几张）
+      if(!details.classList.contains("has-overflow")) return;
+
+      const body = details.querySelector(".proj-body");
+      if(!body) return;
+
+      const gallery = document.createElement("div");
+      gallery.className = "proj-gallery";
+      gallery.setAttribute("aria-label", "项目图片（展开）");
+
+      const strip = document.createElement("div");
+      strip.className = "photo-strip";
+      gallery.appendChild(strip);
+
+      for(const src of allSrcs){
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = "项目图片";
+        enableImageZoom(img);
+        strip.appendChild(img);
+      }
+
+      body.insertBefore(gallery, body.firstChild);
+    }
+
+    function wireDetailsToggles(){
+      const detailsList = Array.from(document.querySelectorAll(".project details"));
+      for(const details of detailsList){
+        details.addEventListener("toggle", () => {
+          if(details.open){
+            buildGallery(details);
+          }else{
+            removeGallery(details);
+            const photo = details.querySelector("summary .photo");
+            if(photo) schedulePreviewClamp(photo);
+          }
+        });
+      }
+    }
+
+    async function probeAndShow(img){
+      const src = img.getAttribute("src");
+      if(!src) return false;
+      const ok = await headOk(src);
+      if(ok){
+        img.style.display = "block";
+        return true;
+      }
+      img.style.display = "none";
+      return false;
+    }
+
+    async function autoLoadPhoto(photo){
+      const strip = photo.querySelector(".photo-strip");
+      if(!strip) return;
+
+      const details = photo.closest("details");
+
+      const seed = parseSeedPathFromPhoto(photo);
+      const parsed = parsePrefixAndExt(seed);
+      if(!parsed){
+        // 没法解析就退回：只尝试显示已有 img
+        const imgs = Array.from(strip.querySelectorAll("img"));
+        for(const img of imgs){ await probeAndShow(img); }
+        setPlaceholderVisibility(photo);
+        return;
+      }
+
+      const prefix = parsed.prefix;
+      const preferredExt = parsed.ext;
+      const letters = PROJECT_IMG_LETTERS.slice(0, PROJECT_IMG_MAX);
+
+      // 清空旧 img（由脚本按规则重建）
+      for(const img of Array.from(strip.querySelectorAll("img"))){ img.remove(); }
+
+      const foundSrcs = [];
+
+      for(const letter of letters){
+        // 先试 seed 同扩展名，再试常见扩展名
+        const exts = [preferredExt, ...PROJECT_IMG_EXTS.filter(e => e !== preferredExt)];
+        let foundSrc = null;
+        for(const ext of exts){
+          const candidate = `${prefix}${letter}.${ext}`;
+          if(await headOk(candidate)){
+            foundSrc = candidate;
+            break;
+          }
+        }
+        if(foundSrc){
+          const img = ensureImg(strip, foundSrc);
+          img.style.display = "block";
+          img.dataset.found = "1";
+          foundSrcs.push(foundSrc);
+          img.addEventListener("load", () => schedulePreviewClamp(photo), { once: true });
+        }
+      }
+
+      setPlaceholderVisibility(photo);
+
+      // 记录“完整图片列表”，用于展开态 gallery（折叠态可能会隐藏部分）
+      photo.dataset.allSrcs = JSON.stringify(foundSrcs);
+      setHasMedia(details, foundSrcs.length > 0);
+
+      if(details && details.open){
+        // 先算预览能放下多少，再把“放不下的”放进展开区
+        schedulePreviewClamp(photo);
+        requestAnimationFrame(() => buildGallery(details));
+      }else{
+        schedulePreviewClamp(photo);
+      }
+    }
+
+    // 初始化：所有项目图片区域按规则自动加载（需在 projects 渲染完成后调用）
+    async function initProjectPhotos(){
+      const photos = Array.from(document.querySelectorAll(".photo"));
+      for(const photo of photos){
+        await autoLoadPhoto(photo);
+      }
+
+      wireDetailsToggles();
+
+      // 兜底：窗口尺寸变化时，重新计算折叠态可见数量
+      window.addEventListener("resize", () => {
+        for(const photo of Array.from(document.querySelectorAll("summary .photo"))){
+          const details = photo.closest("details");
+          if(details){
+            schedulePreviewClamp(photo);
+            if(details.open) requestAnimationFrame(() => buildGallery(details));
+          }
+        }
+      }, { passive: true });
+    }
 
     // ===== Tiny toast =====
     const toastEl = document.createElement("div");
@@ -972,6 +1431,19 @@
 
     // year
     document.getElementById("year").innerText = new Date().getFullYear();
+
+    // ===== Bootstrap =====
+    (async function bootstrap(){
+      try{
+        const content = await loadContent();
+        applyContent(content);
+        await initProjectPhotos();
+      }catch(e){
+        console.error(e);
+      }
+    })();
+
+    // Projects: use native <details>/<summary> interaction (minimal motion)
   </script>
 </body>
 </html>

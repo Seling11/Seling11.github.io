@@ -1,0 +1,283 @@
+{
+  "title": "周圣业｜网页版简历（单列备份）",
+  "brand": {
+    "title": "周圣业｜网页版简历",
+    "subtitle": "Microelectronics / FPGA / CV"
+  },
+  "nav": [
+    { "href": "#about", "label": "概览" },
+    { "href": "#edu", "label": "教育" },
+    { "href": "#skills", "label": "技能" },
+    { "href": "#projects", "label": "项目" },
+    { "href": "#honors", "label": "成果&获奖" }
+  ],
+  "actions": {
+    "theme": { "label": "主题", "title": "切换主题" },
+    "exportPdf": { "label": "导出PDF", "title": "打印 / 导出 PDF" },
+    "copyContact": { "label": "复制联系", "title": "复制联系方式" }
+  },
+  "hint": {
+    "expand": "点击展开"
+  },
+  "about": {
+    "name": "周圣业",
+    "subtitle": "电子科技大学｜微电子科学与工程（在读） · 方向：FPGA/嵌入式系统/计算机视觉",
+    "chips": [
+      "成绩排名：2024-2025 学年 23 / 152",
+      "预估推免资格评定排名：前 10%",
+      "技能关键词：Verilog HDL / OpenCV / 嵌入式 / FPGA"
+    ],
+    "contact": {
+      "title": "联系方式",
+      "hint": "一键复制更方便",
+      "items": [
+        { "k": "地点", "v": "四川省成都市郫都区", "type": "text" },
+        { "k": "电话", "v": "13152170139", "type": "code", "id": "phone" },
+        {
+          "k": "邮箱",
+          "v": "st_joe@163.com",
+          "type": "linkCode",
+          "id": "email",
+          "href": "mailto:st_joe@163.com"
+        },
+        {
+          "k": "个人网站",
+          "v": "stjoe.top/CV",
+          "type": "linkCode",
+          "id": "website",
+          "href": "https://stjoe.top/CV"
+        },
+        { "k": "学校", "v": "电子科技大学", "type": "text" },
+        { "k": "专业", "v": "微电子科学与工程", "type": "text" }
+      ]
+    }
+  },
+  "sections": {
+    "edu": {
+      "title": "教育背景",
+      "desc": "成绩排名与主修课程",
+      "cards": [
+        {
+          "title": "电子科技大学｜微电子科学与工程",
+          "list": [
+            "成绩排名：2024-2025 学年 23 / 152",
+            "预估保研资格评定排名：前 10%"
+          ],
+          "tags": [
+            "大学物理I（97）",
+            "编程导论（95）",
+            "微电子系统（99）",
+            "微积分II（90）",
+            "数字逻辑设计（94）",
+            "电路分析与设计（92）",
+            "电子器件（92）"
+          ]
+        },
+        {
+          "title": "学生工作 / 组织经历",
+          "list": [
+            "班级宣传委员",
+            "学院社团工作站部长",
+            "科协副部长",
+            "党委影像工作室成员",
+            "课程助教"
+          ]
+        }
+      ]
+    },
+    "skills": {
+      "title": "技能能力",
+      "desc": "技术栈与综合能力",
+      "cards": [
+        {
+          "title": "核心技能",
+          "list": [
+            "Verilog HDL：数字逻辑与系统设计",
+            "OpenCV 图像处理：Python / C++",
+            "嵌入式编程：相机采集链路、HDMI 显示链路、资源受限优化"
+          ],
+          "tags": ["Verilog HDL", "OpenCV", "FPGA", "HDMI"]
+        },
+        {
+          "title": "综合能力",
+          "list": [
+            "3D 建模、视频制作、网页制作等",
+            "项目组织：队长/负责人经历（方案设计、进度推进、交付验证）"
+          ]
+        }
+      ]
+    },
+    "projects": {
+      "title": "项目经历（科研及竞赛）",
+      "desc": "项目内容与核心工作",
+      "photo": {
+        "placeholderTitle": "项目图片占位",
+        "placeholderPaths": ["assets/project-{{id}}-a.png", "assets/project-{{id}}-b.png", "assets/project-{{id}}-c.png"],
+        "placeholders": {
+          "p1": "可替换为：效果对比图 / 拼接结果 / 展示海报",
+          "p2": "可替换为：硬件平台照片 / HDMI 输出画面 / 框图",
+          "p3": "可替换为：系统框图 / 端到端流程 / 推理界面",
+          "p4": "可替换为：CPU 框图 / 波形 / 板上演示"
+        }
+      },
+      "items": [
+        {
+          "id": "1",
+          "title": "图像处理算法的研究与实现",
+          "role": "项目负责人",
+          "sub": ["🗓️ 2024.1 – 2024.11", "🧠 OpenCV / 特征点 / 拼接"],
+          "imageSeed": "assets/project-1-a.png",
+          "contentTitle": "项目内容",
+          "content": [
+            "研究并在嵌入式设备上实现高效的图像处理与拼接算法，成果获评校级优秀项目，并在 2025 年新工科作品展中展出。"
+          ],
+          "workTitle": "核心工作",
+          "work": [
+            "学习并掌握 Python / C++ 及 OpenCV 库与基本原理。",
+            "基于 SIFT 与 SURF 实现特征点检测与透视变换，并在嵌入式设备上完成复杂场景下的多图拼接任务。"
+          ],
+          "stackTitle": "技术栈",
+          "stack": ["Python", "C++", "OpenCV", "SIFT", "SURF", "Homography"]
+        },
+        {
+          "id": "2",
+          "title": "基于国产FPGA的实时视频畸变校正",
+          "role": "队长",
+          "sub": ["🗓️ 2025.9 – 2025.12", "⚙️ Ti60F225 / 相机采集 / HDMI 输出"],
+          "imageSeed": "assets/project-2-a.png",
+          "contentTitle": "项目内容",
+          "content": [
+            "基于国产易灵思 Ti60F225 FPGA 平台，构建相机采集、图像处理及 HDMI 输出显示全流程。",
+            "项目荣获嵌入式芯片与系统设计竞赛 FPGA 创新设计赛道国家级一等奖；相关成果正在撰写论文并预计于 5 月投递 SCI 期刊。"
+          ],
+          "workTitle": "核心工作",
+          "work": [
+            "全面负责整体方案设计、图像算法移植、硬件实现与系统联调优化。",
+            "针对平台资源受限瓶颈提出“动态行缓存策略”，通过数据预处理并实时调整缓存行数，将畸变校正所需 BRAM 存储空间缩减超 60%，实现低资源消耗下的硬件级图像校正。"
+          ],
+          "stackTitle": "技术栈",
+          "stack": ["FPGA", "Verilog", "Line Buffer", "HDMI", "Camera ISP"]
+        },
+        {
+          "id": "3",
+          "title": "基于 FPGA 的高精度低功耗智能声音事件检测系统",
+          "role": "成员",
+          "sub": ["🗓️ 2024.11 – 2025.10", "🧩 Zynq UltraScale+ ZCU102 / DPU 部署"],
+          "imageSeed": "assets/project-3-a.png",
+          "contentTitle": "项目内容",
+          "content": [
+            "在 Zynq UltraScale+ ZCU102 硬件平台上利用 DPU 进行底层模型部署与算力加速，完成多种复杂声音事件的精准检测验证，实现吞吐率 1148.2 帧/秒，分类准确率 90.28%。"
+          ],
+          "workTitle": "核心工作",
+          "work": ["负责在 Vitis AI 中实现量化编译以及 DPU 硬件部署。"],
+          "stackTitle": "技术栈",
+          "stack": ["Zynq", "DPU", "Edge AI", "Quantization"]
+        },
+        {
+          "id": "4",
+          "title": "简易 16bit RISC CPU 设计",
+          "role": "队长",
+          "sub": ["🗓️ 2025.9 – 2025.10", "🏗️ 哈佛结构 / ROM-RAM-CPU 集成验证"],
+          "imageSeed": "assets/project-4-a.png",
+          "contentTitle": "项目内容",
+          "content": ["设计并实现一个基于 RISC 的简易 CPU 系统，集成 ROM、RAM、CPU 等模块。"],
+          "workTitle": "核心工作",
+          "work": [
+            "负责 CPU 内部核心架构设计，独立完成指令获取（Fetch）、控制单元（CU）以及数据通路的设计与开发，并主导完成系统最终集成验证。"
+          ],
+          "stackTitle": "技术栈",
+          "stack": ["Verilog", "Harvard", "Control Unit", "Datapath", "Integration Test"]
+        },
+        {
+          "id": "5",
+          "title": "嵌入式芯片与系统设计竞赛 FPGA 创新设计赛道",
+          "role": "竞赛",
+          "sub": ["🏆 国家级一等奖（企业奖候选）"],
+          "imageSeed": "assets/project-5-a.png",
+          "contentTitle": "竞赛内容",
+          "content": ["FPGA 创新设计赛道参赛项目，获得国家级一等奖（企业奖候选）。"],
+          "workTitle": "个人贡献",
+          "work": ["详见上方项目经历对应竞赛项目的实现与成果。"],
+          "stackTitle": "关键词",
+          "stack": ["FPGA", "嵌入式系统", "竞赛"]
+        },
+        {
+          "id": "6",
+          "title": "全国大学生电子设计竞赛（四川赛区）",
+          "role": "竞赛",
+          "sub": ["🏆 二等奖（2024）", "🏆 二等奖（2025）"],
+          "imageSeed": "assets/project-6-a.png",
+          "contentTitle": "竞赛内容",
+          "content": ["参与全国大学生电子设计竞赛四川赛区，连续两年获得二等奖。"],
+          "workTitle": "个人贡献",
+          "work": ["按赛题完成系统方案设计、实现与调试，并进行现场测试与答辩。"],
+          "stackTitle": "关键词",
+          "stack": ["系统设计", "调试优化", "竞赛"]
+        },
+        {
+          "id": "7",
+          "title": "盟升杯电子设计竞赛",
+          "role": "竞赛",
+          "sub": ["🏆 高年级组一等奖"],
+          "imageSeed": "assets/project-7-a.png",
+          "contentTitle": "竞赛内容",
+          "content": ["参加盟升杯电子设计竞赛，高年级组一等奖。"],
+          "workTitle": "个人贡献",
+          "work": ["完成系统实现与联调，针对关键瓶颈进行优化，保证现场表现与稳定性。"],
+          "stackTitle": "关键词",
+          "stack": ["电子设计", "系统联调", "优化"]
+        },
+        {
+          "id": "8",
+          "title": "电子科技大学创格杯电子设计竞赛",
+          "role": "竞赛",
+          "sub": ["🏆 一等奖（第一名）"],
+          "imageSeed": "assets/project-8-a.png",
+          "contentTitle": "竞赛内容",
+          "content": ["参加校内创格杯电子设计竞赛，获得一等奖（第一名）。"],
+          "workTitle": "个人贡献",
+          "work": ["推进方案落地、实现与验证，完成展示材料与答辩准备。"],
+          "stackTitle": "关键词",
+          "stack": ["电子设计", "展示答辩", "交付验证"]
+        }
+      ]
+    },
+    "honors": {
+      "title": "成果及获奖情况",
+      "desc": "专利 / 竞赛 / 奖学金",
+      "patent": {
+        "title": "专利",
+        "list": ["《一种基于特征点分析的运动检测的方法及其装置》——发明专利，已授权"]
+      },
+      "scholarship": {
+        "title": "奖学金",
+        "tags": [
+          "2025 校级优秀学生奖学金",
+          "2025 院级学业奖学金",
+          "2025 院级瓦特科技创新奖学金（学院前1%）",
+          "__BR__",
+          "2024 校级专项奖学金",
+          "2024 院级学业奖学金",
+          "2024 院级卓越领导力奖学金（学院前1%）",
+          "2024 院级科技创新奖学金（学院前5%）"
+        ]
+      },
+      "contest": {
+        "title": "竞赛",
+        "list": [
+          "嵌入式芯片与系统设计竞赛 FPGA 创新设计赛道：国家级一等奖（企业奖候选）",
+          "全国大学生电子设计竞赛（四川赛区）：二等奖（2024），二等奖（2025）",
+          "盟升杯电子设计竞赛：高年级组一等奖",
+          "电子科技大学创格杯电子设计竞赛：一等奖（第一名）",
+          "校内课外创新实践项目：中期和结题均获评优秀，参加新工科作品展",
+          "大学生创新创业训练项目：中期和结题均获评优秀"
+        ]
+      }
+    }
+  },
+  "footer": "周圣业 · 本页面支持打印导出 PDF",
+  "toast": {
+    "copyOk": "已复制联系方式",
+    "copyFail": "复制失败：浏览器不支持剪贴板权限"
+  }
+}

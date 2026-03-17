@@ -92,8 +92,9 @@
     /* Small screens: move nav to next row */
     @media (max-width: 740px){
       .topbar-inner{ flex-wrap: wrap; }
-      .brand{ min-width: auto; order: 1; }
-      .actions{ min-width: auto; order: 2; }
+      .brand{ min-width: 0; order: 1; flex: 1 1 auto; }
+      .brand-title{ min-width: 0; }
+      .actions{ min-width: auto; order: 2; flex: 0 0 auto; }
       .nav{ width: 100%; order: 3; justify-content: center; }
 
       /* 小屏幕：隐藏“导出PDF”按钮 */
@@ -633,6 +634,18 @@
     }
 
     /* Print */
+    /* Small screens (late override to beat base rules) */
+    @media (max-width: 740px){
+      .topbar-inner{ flex-wrap: wrap; }
+      .brand{ min-width: 0; order: 1; flex: 1 1 auto; }
+      .brand-title{ min-width: 0; }
+      .actions{ min-width: auto; order: 2; flex: 0 0 auto; }
+      .nav{ width: 100%; order: 3; justify-content: center; }
+
+      /* 小屏幕：隐藏“导出PDF”按钮 */
+      #btnExport{ display:none; }
+    }
+
     @media print{
       .topbar, .actions, .pill, #btnCopy{ display:none !important; }
       body{ background: #fff; color:#000; }

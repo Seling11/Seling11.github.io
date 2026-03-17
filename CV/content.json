@@ -111,14 +111,8 @@
       "title": "项目经历（科研及竞赛）",
       "desc": "项目内容与核心工作",
       "photo": {
-        "placeholderTitle": "项目图片占位",
-        "placeholderPaths": ["assets/project-{{id}}-a.png", "assets/project-{{id}}-b.png", "assets/project-{{id}}-c.png"],
-        "placeholders": {
-          "p1": "可替换为：效果对比图 / 拼接结果 / 展示海报",
-          "p2": "可替换为：硬件平台照片 / HDMI 输出画面 / 框图",
-          "p3": "可替换为：系统框图 / 端到端流程 / 推理界面",
-          "p4": "可替换为：CPU 框图 / 波形 / 板上演示"
-        }
+        "placeholderTitle": "图片较大。加载中，请等候",
+        "placeholderPaths": ["assets/project-{{id}}-a.png"]
       },
       "items": [
         {
@@ -142,7 +136,7 @@
         {
           "id": "2",
           "title": "基于国产FPGA的实时视频畸变校正",
-          "role": "队长",
+          "role": "组长",
           "sub": ["🗓️ 2025.9 – 2025.12", "⚙️ Ti60F225 / 相机采集 / HDMI 输出"],
           "imageSeed": "assets/project-2-a.png",
           "contentTitle": "项目内容",
@@ -189,9 +183,26 @@
           "stack": ["Verilog", "Harvard", "Control Unit", "Datapath", "Integration Test"]
         },
         {
+          "id": "9",
+          "title": "《一种基于特征点分析的运动检测的方法及其装置》｜已授权",
+          "role": "排位：1",
+          "sub": ["📄 发明专利", "✅ 已授权"],
+          "imageSeed": "assets/project-9-a.png",
+          "contentTitle": "专利内容",
+          "content": [
+            "《一种基于特征点分析的运动检测的方法及其装置》——发明专利，已授权"
+          ],
+          "workTitle": "说明",
+          "work": [
+            "该条目为成果展示，与下方竞赛条目分开展示。"
+          ],
+          "stackTitle": "关键词",
+          "stack": ["专利", "发明", "已授权"]
+        },
+        {
           "id": "5",
           "title": "嵌入式芯片与系统设计竞赛 FPGA 创新设计赛道",
-          "role": "竞赛",
+          "role": "队长",
           "sub": ["🏆 国家级一等奖（企业奖候选）"],
           "imageSeed": "assets/project-5-a.png",
           "contentTitle": "竞赛内容",
@@ -204,7 +215,7 @@
         {
           "id": "6",
           "title": "全国大学生电子设计竞赛（四川赛区）",
-          "role": "竞赛",
+          "role": "队长",
           "sub": ["🏆 二等奖（2024）", "🏆 二等奖（2025）"],
           "imageSeed": "assets/project-6-a.png",
           "contentTitle": "竞赛内容",
@@ -217,7 +228,7 @@
         {
           "id": "7",
           "title": "盟升杯电子设计竞赛",
-          "role": "竞赛",
+          "role": "队长",
           "sub": ["🏆 高年级组一等奖"],
           "imageSeed": "assets/project-7-a.png",
           "contentTitle": "竞赛内容",
@@ -230,7 +241,7 @@
         {
           "id": "8",
           "title": "电子科技大学创格杯电子设计竞赛",
-          "role": "竞赛",
+          "role": "队长",
           "sub": ["🏆 一等奖（第一名）"],
           "imageSeed": "assets/project-8-a.png",
           "contentTitle": "竞赛内容",
@@ -271,6 +282,34 @@
           "电子科技大学创格杯电子设计竞赛：一等奖（第一名）",
           "校内课外创新实践项目：中期和结题均获评优秀，参加新工科作品展",
           "大学生创新创业训练项目：中期和结题均获评优秀"
+        ]
+      }
+    },
+    "studentWork": {
+      "title": "学生工作",
+      "desc": "出题 / 评审 / 分享 / 助教",
+      "card": {
+        "groups": [
+          {
+            "title": "科创类工作",
+            "list": [
+              "第二届创格杯电子设计竞赛：核心出题人、评审员",
+              "第一届英才杯电子设计竞赛：出题人、评审员",
+              "担任创格科协第57期学生分享交流活动主讲人",
+              "《编程导论（IP）》课程助教",
+              "《嵌入式系统（EP）》课程助教"
+            ]
+          },
+          {
+            "title": "其它工作",
+            "list": [
+              "班级宣传委员",
+              "学院社团工作站部长",
+              "科协副部长",
+              "党委影像工作室成员",
+              "课程助教"
+            ]
+          }
         ]
       }
     }

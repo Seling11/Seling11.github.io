@@ -472,7 +472,7 @@
       /* 不用 vw：避免窗口变窄但卡片宽度不变时图片区也跟着缩 */
       /* 让图片决定理想宽度，但最大宽度受 summary/卡片约束 */
       max-width: 70%;
-      min-width: 220px;
+      min-width: 180px;
       min-height: calc(var(--photo-h-cur, var(--photo-h)) + 20px);
       border-radius: 14px;
       border: 1px dashed rgba(255,255,255,.28);
@@ -744,6 +744,16 @@
       <div id="honorsWrap"></div>
     </section>
 
+    <!-- ===== Student Work ===== -->
+    <section id="studentWork">
+      <div class="section-title">
+        <h2 id="studentWorkTitle"></h2>
+        <p id="studentWorkDesc"></p>
+      </div>
+
+      <div id="studentWorkWrap"></div>
+    </section>
+
     <div class="foot">
       © <span id="year"></span> <span id="footerText"></span>
     </div>
@@ -1013,6 +1023,41 @@
       wrap.appendChild(card3);
     }
 
+    function renderStudentWork(cfg){
+      const wrap = document.getElementById("studentWorkWrap");
+      if(!wrap) return;
+      clearChildren(wrap);
+
+      const card = h("div", "card");
+
+      const groups = (Array.isArray(cfg?.card?.groups) && cfg.card.groups.length)
+        ? cfg.card.groups
+        : ((Array.isArray(cfg?.cards) && cfg.cards.length)
+          ? cfg.cards
+          : [{ title: cfg?.card?.title ?? "", list: cfg?.card?.list || cfg?.list || [] }]);
+
+      for(let i = 0; i < groups.length; i++){
+        const g = groups[i];
+        const title = String(g?.title ?? "").trim();
+        const list = Array.isArray(g?.list) ? g.list : [];
+
+        if(title){
+          const head = h("div", "");
+          head.style.marginTop = i === 0 ? "0" : "14px";
+          head.appendChild(h("b", "", title));
+          card.appendChild(head);
+        }
+
+        if(list.length){
+          const ul = h("ul", "list");
+          for(const li of list) ul.appendChild(h("li", "", li));
+          card.appendChild(ul);
+        }
+      }
+
+      wrap.appendChild(card);
+    }
+
     function applyContent(content){
       CONTENT = content;
       document.title = content?.title ?? "";
@@ -1042,6 +1087,10 @@
       setText("honorsTitle", content?.sections?.honors?.title ?? "");
       setText("honorsDesc", content?.sections?.honors?.desc ?? "");
       renderHonors(content?.sections?.honors);
+
+      setText("studentWorkTitle", content?.sections?.studentWork?.title ?? "");
+      setText("studentWorkDesc", content?.sections?.studentWork?.desc ?? "");
+      renderStudentWork(content?.sections?.studentWork);
 
       setText("footerText", content?.footer ?? "");
 
@@ -1074,7 +1123,8 @@
 
     const PROJECT_IMG_MAX = 6;
     const PROJECT_IMG_LETTERS = ["a","b","c","d","e","f","g","h","i","j"]; // 够用；最终会按 MAX 截断
-    const PROJECT_IMG_EXTS = ["png","jpg","jpeg","webp","gif"]; // 常见格式
+    // 常见格式：优先 webp（体积更小、解码更快）
+    const PROJECT_IMG_EXTS = ["webp","png","jpg","jpeg","gif"];
 
     function parseSeedPathFromPhoto(photo){
       // 最高优先：由内容渲染写入的 seed
@@ -1100,6 +1150,14 @@
       const m = clean.match(/^(.*-)([a-zA-Z])\.(\w+)$/);
       if(!m) return null;
       return { prefix: m[1], ext: m[3].toLowerCase() };
+    }
+
+    function splitDirAndBasePrefix(prefix){
+      // "assets/project-5-" => { dir: "assets/", basePrefix: "project-5-" }
+      // "assets/sub/project-5-" => { dir: "assets/sub/", basePrefix: "project-5-" }
+      const i = String(prefix || "").lastIndexOf("/");
+      if(i === -1) return { dir: "", basePrefix: String(prefix || "") };
+      return { dir: prefix.slice(0, i + 1), basePrefix: prefix.slice(i + 1) };
     }
 
     async function headOk(url){
@@ -1134,6 +1192,8 @@
       const img = document.createElement("img");
       img.src = src;
       img.alt = "项目图片";
+      img.loading = "lazy";
+      img.decoding = "async";
       img.style.display = "none";
       enableImageZoom(img);
       strip.appendChild(img);
@@ -1351,6 +1411,8 @@
         const img = document.createElement("img");
         img.src = src;
         img.alt = "项目图片";
+        img.loading = "lazy";
+        img.decoding = "async";
         enableImageZoom(img);
         strip.appendChild(img);
       }
@@ -1423,14 +1485,32 @@
 
       for(const letter of letters){
         // 先试 seed 同扩展名，再试常见扩展名
-        const exts = [preferredExt, ...PROJECT_IMG_EXTS.filter(e => e !== preferredExt)];
+        // 额外规则：始终优先尝试 webp（即使 seed 是 png/jpg）
+        const exts = Array.from(new Set(["webp", preferredExt, ...PROJECT_IMG_EXTS]));
         let foundSrc = null;
         for(const ext of exts){
-          const candidate = `${prefix}${letter}.${ext}`;
-          if(await headOk(candidate)){
-            foundSrc = candidate;
-            break;
+          const candidates = [];
+
+          if(ext === "webp"){
+            // Prefer webp variants under assets/webp/ to keep assets root clean.
+            const { dir, basePrefix } = splitDirAndBasePrefix(prefix);
+            if(dir){
+              candidates.push(`${dir}webp/${basePrefix}${letter}.webp`);
+            }else{
+              candidates.push(`webp/${prefix}${letter}.webp`);
+            }
           }
+
+          // Legacy location: alongside the original image
+          candidates.push(`${prefix}${letter}.${ext}`);
+
+          for(const candidate of candidates){
+            if(await headOk(candidate)){
+              foundSrc = candidate;
+              break;
+            }
+          }
+          if(foundSrc) break;
         }
         if(foundSrc){
           const img = ensureImg(strip, foundSrc);

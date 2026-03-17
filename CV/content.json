@@ -110,6 +110,10 @@
     "projects": {
       "title": "项目经历（科研及竞赛）",
       "desc": "项目内容与核心工作",
+      "home": {
+        "text": "项目主页",
+        "label": "项目主页"
+      },
       "photo": {
         "placeholderTitle": "图片较大。加载中，请等候",
         "placeholderPaths": ["assets/project-{{id}}-a.png"]
@@ -138,6 +142,7 @@
           "title": "基于国产FPGA的实时视频畸变校正",
           "role": "组长",
           "sub": ["🗓️ 2025.9 – 2025.12", "⚙️ Ti60F225 / 相机采集 / HDMI 输出"],
+          "homeUrl": "https://stjoe.top/FPGA/",
           "imageSeed": "assets/project-2-a.png",
           "contentTitle": "项目内容",
           "content": [
@@ -172,6 +177,7 @@
           "title": "简易 16bit RISC CPU 设计",
           "role": "队长",
           "sub": ["🗓️ 2025.9 – 2025.10", "🏗️ 哈佛结构 / ROM-RAM-CPU 集成验证"],
+          "homeUrl": "https://stjoe.top/ADDL/addl_cpu_group1.html",
           "imageSeed": "assets/project-4-a.png",
           "contentTitle": "项目内容",
           "content": ["设计并实现一个基于 RISC 的简易 CPU 系统，集成 ROM、RAM、CPU 等模块。"],
@@ -204,6 +210,7 @@
           "title": "嵌入式芯片与系统设计竞赛 FPGA 创新设计赛道",
           "role": "队长",
           "sub": ["🏆 国家级一等奖（企业奖候选）"],
+          "homeUrl": "https://stjoe.top/FPGA/",
           "imageSeed": "assets/project-5-a.png",
           "contentTitle": "竞赛内容",
           "content": ["FPGA 创新设计赛道参赛项目，获得国家级一等奖（企业奖候选）。"],

@@ -24,6 +24,8 @@
 
       --max: 1080px;
       --photo-h: 140px;
+      --photo-max-w: 60%;
+      --photo-min-w: 160px;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
               Arial, "Noto Sans", "Liberation Sans", "PingFang SC", "Hiragino Sans GB",
@@ -300,6 +302,21 @@
       font-size: 12.5px;
     }
 
+    .section-title-right{
+      display:flex;
+      align-items:baseline;
+      justify-content:flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      text-align:right;
+    }
+    .section-controls{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+
     .grid-2{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -382,51 +399,98 @@
       gap: 16px;
       user-select:none;
       position: relative;
+      /* On narrow screens we reserve space for overlay actions via CSS var */
+      --summary-actions-reserve: 0px;
     }
     summary::-webkit-details-marker{ display:none; }
 
-    /* Hover hint: "点击展开" (no layout shift; overlay) */
-    summary::after{
-      content: var(--hint-open, "点击展开");
+    /* Collapsed actions overlay ("点击展开" + optional project home icon) */
+    .summary-actions{
       position: absolute;
       left: 16px;
       bottom: 12px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: var(--card2);
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       opacity: 0;
       transform: translateY(4px);
       transition: opacity .14s ease, transform .14s ease;
-      pointer-events: none;
       z-index: 2;
+      pointer-events: none; /* let summary clicks pass through */
+    }
+    .summary-chip{
+      border: 1px solid var(--line);
+      background: var(--card2);
+      color: var(--text);
+      line-height: 1;
       white-space: nowrap;
     }
+    .summary-hint{
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+    .summary-home{
+      padding: 10px 10px;
+      border-radius: 999px;
+      font-size: 14px;
+      text-decoration: none;
+      pointer-events: auto; /* clickable */
+    }
+    .summary-home:hover{ text-decoration: none; border-color: rgba(124,92,255,.35); }
     @media (hover: hover){
-      details:not([open]):hover > summary::after{
+      details:not([open]):hover > summary .summary-actions{
         opacity: 1;
         transform: translateY(0);
       }
     }
-    details:not([open]) > summary:focus-visible::after{
+    details:not([open]) > summary:focus-visible .summary-actions{
       opacity: 1;
       transform: translateY(0);
     }
-    details[open] > summary::after{ content: ""; }
+
+    /* Expanded: show home icon at top-right; hide hint */
+    details[open] > summary .summary-actions{
+      left: auto;
+      bottom: auto;
+      right: 12px;
+      top: 12px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    details[open] > summary .summary-hint{ display:none; }
+    details[open] > summary .summary-actions[data-has-home="0"]{ display:none; }
 
     /* Small screens: place hint where it won't push content; allow slight overlay */
     @media (max-width: 900px){
-      summary::after{
+      .summary-actions{
         left: auto;
         bottom: auto;
         right: 12px;
         top: 12px;
+        flex-direction: column; /* 窄屏：不要并排，改为纵向堆叠 */
+        align-items: flex-end;
+        gap: 6px;
+      }
+      .summary-hint{
         padding: 8px 10px;
         border-radius: 999px;
         font-size: 12.5px;
+      }
+      .summary-home{
+        padding: 8px 9px;
+        font-size: 12.5px;
+      }
+
+      /* 小屏：提示在右上角时始终显示（不依赖 hover） */
+      details:not([open]) > summary .summary-actions{
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* 小屏：给 summary 内容预留右侧空间，避免文字/标签被按钮遮挡（不单独占一行） */
+      summary .proj-left{
+        padding-right: var(--summary-actions-reserve);
       }
     }
 
@@ -471,8 +535,8 @@
       --photo-h-cur: var(--photo-h-local, var(--photo-h-project, var(--photo-h)));
       /* 不用 vw：避免窗口变窄但卡片宽度不变时图片区也跟着缩 */
       /* 让图片决定理想宽度，但最大宽度受 summary/卡片约束 */
-      max-width: 70%;
-      min-width: 180px;
+      max-width: var(--photo-max-w);
+      min-width: var(--photo-min-w);
       min-height: calc(var(--photo-h-cur, var(--photo-h)) + 20px);
       border-radius: 14px;
       border: 1px dashed rgba(255,255,255,.28);
@@ -501,10 +565,40 @@
       display: flex;
       flex-wrap: nowrap;
       align-items: flex-start;
-      justify-content: flex-end;
+      justify-content: flex-start;
       gap: 5px;
-      overflow: hidden; /* 折叠态：单行预览，多余图片不显示 */
+      overflow-x: auto; /* 折叠态：单行预览，允许横向滚动查看全部图片 */
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
     }
+
+    /* Horizontal scrollbar styling (match theme; no new color system) */
+    .photo .photo-strip,
+    .proj-gallery .photo-strip{
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+    }
+    .photo .photo-strip::-webkit-scrollbar,
+    .proj-gallery .photo-strip::-webkit-scrollbar{
+      height: 8px;
+    }
+    .photo .photo-strip::-webkit-scrollbar-track,
+    .proj-gallery .photo-strip::-webkit-scrollbar-track{
+      background: transparent;
+    }
+    .photo .photo-strip::-webkit-scrollbar-thumb,
+    .proj-gallery .photo-strip::-webkit-scrollbar-thumb{
+      background-color: var(--line);
+      border-radius: 999px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+    .photo .photo-strip::-webkit-scrollbar-thumb:hover,
+    .proj-gallery .photo-strip::-webkit-scrollbar-thumb:hover{
+      background-color: var(--faint);
+    }
+
+    /* (project home moved out of photo area; see .summary-actions) */
     .photo img{
       height: var(--photo-h-cur, var(--photo-h));
       width: auto;
@@ -568,10 +662,13 @@
     }
     .proj-gallery .photo-strip{
       display:flex;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
       align-items:flex-start;
       justify-content:flex-start;
       gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
     }
     .proj-gallery img{
       height: var(--photo-h);
@@ -728,7 +825,13 @@
     <section id="projects">
       <div class="section-title">
         <h2 id="projectsTitle"></h2>
-        <p id="projectsDesc"></p>
+        <div class="section-title-right">
+          <p id="projectsDesc"></p>
+          <div class="section-controls" aria-label="项目折叠控制">
+            <button class="btn compact secondary" id="btnProjectsExpandAll" type="button"></button>
+            <button class="btn compact secondary" id="btnProjectsCollapseAll" type="button"></button>
+          </div>
+        </div>
       </div>
 
       <div class="projects-grid" id="projectsGrid"></div>
@@ -780,6 +883,14 @@
     let CONTENT = null;
     let TOAST_COPY_OK = "已复制联系方式";
     let TOAST_COPY_FAIL = "复制失败：浏览器不支持剪贴板权限";
+    let HINT_OPEN_TEXT = "点击展开";
+    let PROJECT_HOME_TEXT = "项目主页↗";
+    let PROJECT_HOME_LABEL = "项目主页";
+
+    // Narrow-screen text safe area under absolute-positioned summary actions.
+    // We keep a single window resize handler and per-card updater callbacks.
+    const SUMMARY_RESERVE_UPDATERS = [];
+    let SUMMARY_RESERVE_WIRED = false;
 
     function cssString(s){
       const t = String(s ?? "");
@@ -800,6 +911,32 @@
       if(className) node.className = className;
       if(text !== undefined && text !== null) node.textContent = text;
       return node;
+    }
+
+    // ===== Projects bulk toggles =====
+    function setProjectsBulkToggleLabels(content){
+      const btnExpand = document.getElementById("btnProjectsExpandAll");
+      const btnCollapse = document.getElementById("btnProjectsCollapseAll");
+      if(btnExpand) btnExpand.textContent = content?.sections?.projects?.controls?.expandAll ?? "全部展开";
+      if(btnCollapse) btnCollapse.textContent = content?.sections?.projects?.controls?.collapseAll ?? "全部折叠";
+    }
+
+    function setAllProjectDetailsOpen(open){
+      const list = Array.from(document.querySelectorAll("#projectsGrid details"));
+      for(const details of list){
+        details.open = !!open;
+      }
+    }
+
+    function wireProjectsBulkToggles(){
+      const btnExpand = document.getElementById("btnProjectsExpandAll");
+      const btnCollapse = document.getElementById("btnProjectsCollapseAll");
+      if(btnExpand){
+        btnExpand.onclick = () => setAllProjectDetailsOpen(true);
+      }
+      if(btnCollapse){
+        btnCollapse.onclick = () => setAllProjectDetailsOpen(false);
+      }
     }
 
     async function loadContent(){
@@ -908,6 +1045,9 @@
       if(!grid) return;
       clearChildren(grid);
 
+      // Reset updaters because we are re-rendering the whole list.
+      SUMMARY_RESERVE_UPDATERS.length = 0;
+
       const photoCfg = cfg?.photo || {};
       const placeholderTitle = photoCfg.placeholderTitle ?? "";
       const pathTpls = photoCfg.placeholderPaths || [];
@@ -918,6 +1058,51 @@
         const details = document.createElement("details");
 
         const summary = document.createElement("summary");
+
+        // Summary overlay actions: hint + optional project home icon.
+        const actions = h("div", "summary-actions");
+        actions.dataset.hasHome = p.homeUrl ? "1" : "0";
+        const hint = h("span", "summary-chip summary-hint", HINT_OPEN_TEXT);
+        actions.appendChild(hint);
+        if(p.homeUrl){
+          const a = document.createElement("a");
+          a.className = "summary-chip summary-home";
+          a.href = p.homeUrl;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = p.homeText || PROJECT_HOME_TEXT;
+          const homeLabel = p.homeLabel || PROJECT_HOME_LABEL;
+          a.setAttribute("aria-label", homeLabel);
+          a.title = homeLabel;
+          a.addEventListener("click", (e) => { e.stopPropagation(); });
+          a.addEventListener("mousedown", (e) => { e.stopPropagation(); });
+          a.addEventListener("pointerdown", (e) => { e.stopPropagation(); });
+          actions.appendChild(a);
+        }
+        summary.appendChild(actions);
+
+        // Prevent narrow-screen overlay actions from covering text.
+        // Use *measured* actions width so cards with/without home button wrap consistently.
+        const mq = window.matchMedia("(max-width: 900px)");
+        const updateSummaryReserve = () => {
+          if(!mq.matches){
+            summary.style.setProperty("--summary-actions-reserve", "0px");
+            return;
+          }
+          // Wait for layout (toggle changes .summary-hint display).
+          requestAnimationFrame(() => {
+            const rect = actions.getBoundingClientRect();
+            const w = Math.ceil(rect.width || 0);
+            // Add a small breathing room so text doesn't touch the actions.
+            const reserve = Math.min(Math.max(w + 12, 60), 240);
+            summary.style.setProperty("--summary-actions-reserve", `${reserve}px`);
+          });
+        };
+        details.addEventListener("toggle", updateSummaryReserve);
+        if(mq.addEventListener) mq.addEventListener("change", updateSummaryReserve);
+        else if(mq.addListener) mq.addListener(updateSummaryReserve);
+        SUMMARY_RESERVE_UPDATERS.push(updateSummaryReserve);
+        updateSummaryReserve();
 
         const left = h("div", "proj-left");
         const titleRow = h("div", "proj-title");
@@ -984,6 +1169,13 @@
         details.appendChild(body);
         wrap.appendChild(details);
         grid.appendChild(wrap);
+      }
+
+      if(!SUMMARY_RESERVE_WIRED){
+        SUMMARY_RESERVE_WIRED = true;
+        window.addEventListener("resize", () => {
+          for(const fn of SUMMARY_RESERVE_UPDATERS) fn();
+        }, { passive: true });
       }
     }
 
@@ -1067,7 +1259,11 @@
       renderNav(content?.nav);
       renderActions(content?.actions);
 
-      document.documentElement.style.setProperty("--hint-open", cssString(content?.hint?.expand ?? "点击展开"));
+      HINT_OPEN_TEXT = content?.hint?.expand ?? "点击展开";
+      document.documentElement.style.setProperty("--hint-open", cssString(HINT_OPEN_TEXT));
+
+      PROJECT_HOME_TEXT = content?.sections?.projects?.home?.text ?? PROJECT_HOME_TEXT;
+      PROJECT_HOME_LABEL = content?.sections?.projects?.home?.label ?? PROJECT_HOME_LABEL;
 
       renderAbout(content?.about);
       renderContact(content?.about?.contact);
@@ -1082,6 +1278,7 @@
 
       setText("projectsTitle", content?.sections?.projects?.title ?? "");
       setText("projectsDesc", content?.sections?.projects?.desc ?? "");
+      setProjectsBulkToggleLabels(content);
       renderProjects(content?.sections?.projects);
 
       setText("honorsTitle", content?.sections?.honors?.title ?? "");
@@ -1335,31 +1532,16 @@
 
       const maxPreviewImages = 3;
 
-      // 尽可能多显示：
-      // 1) 先把预览高度从默认值逐步缩小，争取把更多图片塞进一行
-      // 2) 如果缩到下限仍放不下，再从末尾开始隐藏
+      // 改为：不隐藏图片，溢出时用横向滚动条查看。
       for(const img of found){ img.style.display = "block"; }
-      const allowedOverflow = 10; // 允许少量像素误差，避免过度隐藏
+      const allowedOverflow = 10;
 
-      let hiddenCount = 0;
-
-      // 规则：图片数量 > 3 时，默认视为折叠态放不下；先强制只显示 3 张
-      if(found.length > maxPreviewImages){
-        for(let i = maxPreviewImages; i < found.length; i++){
-          found[i].style.display = "none";
-          hiddenCount++;
-        }
-      }
-      // strip 为 nowrap + overflow hidden；scrollWidth>clientWidth 说明放不下
-      // 用 allowedOverflow 余量抵消小数像素/取整误差，尽量不隐藏
-      while(strip.scrollWidth > strip.clientWidth + allowedOverflow && found.length - hiddenCount > 1){
-        const idx = found.length - 1 - hiddenCount;
-        found[idx].style.display = "none";
-        hiddenCount++;
-      }
+      // 仍沿用原规则：图片数量 > 3 时，默认视为折叠态放不下（展开时走 gallery）
+      const hasOverflow = (found.length > maxPreviewImages)
+        || (strip.scrollWidth > strip.clientWidth + allowedOverflow);
 
       const details = photo.closest("details");
-      if(details) details.classList.toggle("has-overflow", hiddenCount > 0);
+      if(details) details.classList.toggle("has-overflow", hasOverflow);
     }
 
     function getAllSrcsFromPhoto(photo){
@@ -1589,6 +1771,7 @@
         const content = await loadContent();
         applyContent(content);
         await initProjectPhotos();
+        wireProjectsBulkToggles();
       }catch(e){
         console.error(e);
       }

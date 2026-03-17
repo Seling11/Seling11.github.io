@@ -240,6 +240,22 @@
       padding: 14px 14px 12px;
     }
     [data-theme="light"] .contact-card{ background: rgba(255,255,255,.65); }
+
+    .contact-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .contact-hint{
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .btn.compact{
+      padding: 7px 10px;
+      border-radius: 999px;
+    }
     .kv{
       display:grid;
       grid-template-columns: 86px 1fr;
@@ -615,7 +631,7 @@
 
     /* Print */
     @media print{
-      .topbar, .actions, .pill{ display:none !important; }
+      .topbar, .actions, .pill, #btnCopy{ display:none !important; }
       body{ background: #fff; color:#000; }
       .card, .hero, .project{
         box-shadow:none !important;
@@ -646,7 +662,6 @@
       <div class="actions">
         <button class="btn secondary" id="btnTheme" type="button"></button>
         <button class="btn" id="btnExport" type="button" onclick="window.print()"></button>
-        <button class="btn primary" id="btnCopy" type="button"></button>
       </div>
     </div>
   </div>
@@ -663,10 +678,11 @@
         </div>
 
         <aside class="contact-card" aria-label="联系方式">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div class="contact-head">
             <b style="font-size:14px;" id="contactTitle"></b>
-            <span style="font-size:12px;color:var(--muted);" id="contactHint"></span>
+            <button class="btn primary compact" id="btnCopy" type="button"></button>
           </div>
+          <div class="contact-hint" id="contactHint"></div>
           <div class="kv" id="contactKv"></div>
         </aside>
       </div>
@@ -1161,6 +1177,8 @@
       const step = 6;
       const allowedOverflow = 10;
 
+      const maxPreviewImages = 3;
+
       let unifiedH = Math.max(minH, tokenH);
       let hasAny = false;
 
@@ -1181,6 +1199,14 @@
         if(!strip) continue;
         const found = Array.from(strip.querySelectorAll("img")).filter(img => img.dataset.found === "1");
         if(found.length <= 1) continue;
+
+        // 规则：图片数量 > 3 时，折叠预览默认只展示 3 张，
+        // 因此统一高度测量也按 3 张来算，避免为了“塞进一行”而过度缩小高度。
+        if(found.length > maxPreviewImages){
+          for(let i = 0; i < found.length; i++){
+            found[i].style.display = i < maxPreviewImages ? "block" : "none";
+          }
+        }
 
         const w = strip.clientWidth;
         if(w <= 0) continue;
@@ -1231,6 +1257,8 @@
         return;
       }
 
+      const maxPreviewImages = 3;
+
       // 尽可能多显示：
       // 1) 先把预览高度从默认值逐步缩小，争取把更多图片塞进一行
       // 2) 如果缩到下限仍放不下，再从末尾开始隐藏
@@ -1238,6 +1266,14 @@
       const allowedOverflow = 10; // 允许少量像素误差，避免过度隐藏
 
       let hiddenCount = 0;
+
+      // 规则：图片数量 > 3 时，默认视为折叠态放不下；先强制只显示 3 张
+      if(found.length > maxPreviewImages){
+        for(let i = maxPreviewImages; i < found.length; i++){
+          found[i].style.display = "none";
+          hiddenCount++;
+        }
+      }
       // strip 为 nowrap + overflow hidden；scrollWidth>clientWidth 说明放不下
       // 用 allowedOverflow 余量抵消小数像素/取整误差，尽量不隐藏
       while(strip.scrollWidth > strip.clientWidth + allowedOverflow && found.length - hiddenCount > 1){
@@ -1271,6 +1307,14 @@
       if(!photo) return;
       const allSrcs = getAllSrcsFromPhoto(photo);
       if(allSrcs.length === 0) return;
+
+      const maxPreviewImages = 3;
+
+      // 规则：图片数量 > 3 时，默认视为折叠态放不下（即使宽度够）。
+      // 这里直接确保 has-overflow 置为 true，保证展开时走 gallery 逻辑。
+      if(allSrcs.length > maxPreviewImages){
+        details.classList.add("has-overflow");
+      }
 
       // 仅当折叠态放不下（发生溢出）时，展开后才把图片移到正文顶部
       // 一旦需要移动：展示全部图片（不是只展示放不下的那几张）
@@ -1310,6 +1354,17 @@
             if(photo) schedulePreviewClamp(photo);
           }
         });
+
+        const body = details.querySelector(".proj-body");
+        if(body){
+          body.addEventListener("click", (e) => {
+            if(!details.open) return;
+            if(e.target && e.target.closest && e.target.closest("img")) return;
+            if(e.target && e.target.closest && e.target.closest("a")) return;
+            if(e.target && e.target.closest && e.target.closest("button")) return;
+            details.open = false;
+          });
+        }
       }
     }
 

@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高保真粒子效果模型展示</title>
+    <style>
+        :root{
+            --bg: #0b1020;
+            --text: rgba(255,255,255,.92);
+            --muted: rgba(255,255,255,.70);
+            --line: rgba(255,255,255,.12);
+            --card: rgba(255,255,255,.06);
+            --card2: rgba(255,255,255,.10);
+            --shadow: 0 18px 55px rgba(0,0,0,.45);
+            --radius: 18px;
+            --accent: #7c5cff;
+            --accent2:#00f3ff;
+            --accent3:#22c55e;
+            --grid: rgba(255,255,255,.05);
+
+            /* 按钮主题色（随 data-light 覆盖） */
+            --btn-accent: var(--accent2);
+            --btn-glow: rgba(0, 243, 255, 0.35);
+            --btn-ring: rgba(0, 243, 255, 0.18);
+        }
+
+        *{ box-sizing: border-box; }
+        html, body{ height:100%; }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            color: var(--text);
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+                         Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(1200px 700px at 20% -10%, rgba(124,92,255,.38), transparent 55%),
+                radial-gradient(900px 600px at 85% 0%, rgba(0,243,255,.18), transparent 60%),
+                radial-gradient(1000px 700px at 50% 110%, rgba(34,197,94,.14), transparent 55%),
+                linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+                var(--bg);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 46px 46px, 46px 46px, auto;
+            background-position: 50% 50%, 50% 50%, 50% 50%, 0 0, 0 0, 0 0;
+            animation: bg-pulse 18s infinite ease-in-out;
+        }
+
+        @keyframes bg-pulse {
+            0%   { background-position: 50% 50%, 50% 50%, 50% 50%, 0 0, 0 0, 0 0; }
+            50%  { background-position: 45% 56%, 55% 45%, 50% 60%, 20px 20px, 20px 20px, 0 0; }
+            100% { background-position: 50% 50%, 50% 50%, 50% 50%, 0 0, 0 0, 0 0; }
+        }
+
+        body::after{
+            content:"";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(900px 500px at 50% 10%, rgba(0,0,0,.10), transparent 60%),
+                radial-gradient(1200px 900px at 50% 90%, rgba(0,0,0,.42), transparent 60%),
+                radial-gradient(1400px 900px at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%);
+            mix-blend-mode: multiply;
+        }
+
+        /* 亮色场景：降低暗角遮罩，否则会看起来“永远偏黑” */
+        html[data-light="studio"] body::after,
+        html[data-light="shadowless"] body::after,
+        html[data-light="softlight"] body::after,
+        html[data-light="daylight"] body::after,
+        html[data-light="singlepoint"] body::after{
+            mix-blend-mode: normal;
+            opacity: 0.18;
+            background:
+                radial-gradient(900px 520px at 50% 10%, rgba(0,0,0,.06), transparent 62%),
+                radial-gradient(1200px 900px at 50% 90%, rgba(0,0,0,.10), transparent 64%);
+        }
+
+        /* 由 JS 的 setLighting 写入 data-light，用来同步网页背景氛围 */
+        html[data-light="studio"] body{
+            --btn-accent: var(--accent);
+            --btn-glow: rgba(124, 92, 255, 0.28);
+            --btn-ring: rgba(124, 92, 255, 0.18);
+            --bg:#f6f7fb;
+            --grid: rgba(0,0,0,.06);
+            --text: rgba(0,0,0,.88);
+            --muted: rgba(0,0,0,.62);
+            --line: rgba(0,0,0,.10);
+            --card: rgba(0,0,0,.04);
+            --card2: rgba(0,0,0,.06);
+            color: rgba(0,0,0,.86);
+            background:
+                radial-gradient(1000px 650px at 20% -10%, rgba(124,92,255,.14), transparent 55%),
+                radial-gradient(900px 600px at 85% 0%, rgba(0,243,255,.10), transparent 60%),
+                radial-gradient(1100px 700px at 50% 110%, rgba(34,197,94,.08), transparent 55%),
+                linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+                var(--bg);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, auto;
+        }
+        html[data-light="shadowless"] body{
+            --btn-accent: var(--accent);
+            --btn-glow: rgba(124, 92, 255, 0.22);
+            --btn-ring: rgba(124, 92, 255, 0.16);
+            --bg:#ffffff;
+            --grid: rgba(0,0,0,.05);
+            --text: rgba(0,0,0,.88);
+            --muted: rgba(0,0,0,.62);
+            --line: rgba(0,0,0,.10);
+            --card: rgba(0,0,0,.04);
+            --card2: rgba(0,0,0,.06);
+            color: rgba(0,0,0,.86);
+            background:
+                radial-gradient(900px 520px at 20% 0%, rgba(0,0,0,.03), transparent 60%),
+                radial-gradient(1000px 700px at 80% 30%, rgba(0,0,0,.03), transparent 60%),
+                linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+                var(--bg);
+            background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px, auto;
+        }
+        html[data-light="softlight"] body{
+            --btn-accent: var(--accent);
+            --btn-glow: rgba(124, 92, 255, 0.22);
+            --btn-ring: rgba(124, 92, 255, 0.16);
+            --bg:#f0f1f5;
+            --grid: rgba(0,0,0,.05);
+            --text: rgba(0,0,0,.88);
+            --muted: rgba(0,0,0,.62);
+            --line: rgba(0,0,0,.10);
+            --card: rgba(0,0,0,.04);
+            --card2: rgba(0,0,0,.06);
+            color: rgba(0,0,0,.86);
+            background:
+                radial-gradient(1100px 720px at 15% -10%, rgba(255,178,122,.22), transparent 60%),
+                radial-gradient(900px 650px at 85% 0%, rgba(124,92,255,.12), transparent 60%),
+                radial-gradient(1200px 800px at 50% 110%, rgba(0,243,255,.10), transparent 58%),
+                linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+                var(--bg);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 72px 72px, 72px 72px, auto;
+        }
+        html[data-light="daylight"] body{
+            --btn-accent: var(--accent3);
+            --btn-glow: rgba(34, 197, 94, 0.25);
+            --btn-ring: rgba(34, 197, 94, 0.16);
+            --bg:#87CEEB;
+            --grid: rgba(255,255,255,.12);
+            color: rgba(255,255,255,.95);
+            background:
+                radial-gradient(900px 520px at 20% 0%, rgba(255,255,255,.25), transparent 60%),
+                radial-gradient(1200px 700px at 80% 30%, rgba(255,255,255,.18), transparent 60%),
+                linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(0,0,0,.18), transparent 45%),
+                var(--bg);
+            background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px, 100% 100%, auto;
+        }
+        html[data-light="photostudio"] body{
+            --btn-accent: var(--accent2);
+            --btn-glow: rgba(0, 243, 255, 0.35);
+            --btn-ring: rgba(0, 243, 255, 0.18);
+            --bg:#07070a;
+            --grid: rgba(255,255,255,.04);
+            background:
+                radial-gradient(900px 620px at 50% 40%, rgba(255,255,255,.10), transparent 62%),
+                radial-gradient(1000px 720px at 10% 10%, rgba(255,0,110,.12), transparent 60%),
+                radial-gradient(1000px 720px at 90% 10%, rgba(0,243,255,.10), transparent 60%),
+                linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+                var(--bg);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, auto;
+        }
+        html[data-light="singlepoint"] body{
+            --btn-accent: var(--accent);
+            --btn-glow: rgba(124, 92, 255, 0.22);
+            --btn-ring: rgba(124, 92, 255, 0.16);
+            /* 单点自然光：也用白底，更接近“室外自然/室内窗光”观感 */
+            --bg:#ffffff;
+            --grid: rgba(0,0,0,.05);
+            --text: rgba(0,0,0,.88);
+            --muted: rgba(0,0,0,.62);
+            --line: rgba(0,0,0,.10);
+            --card: rgba(0,0,0,.04);
+            --card2: rgba(0,0,0,.06);
+            color: rgba(0,0,0,.86);
+            background:
+                radial-gradient(900px 520px at 65% 18%, rgba(255,210,170,.35), transparent 62%),
+                radial-gradient(1200px 800px at 15% 0%, rgba(124,92,255,.10), transparent 62%),
+                linear-gradient(0deg, var(--grid) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+                var(--bg);
+            background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px, auto;
+        }
+
+        /* Three.js canvas */
+        canvas{
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display:block;
+        }
+
+        #info {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+            max-width: calc(100vw - 18px);
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
+        }
+        #info::-webkit-scrollbar{ display:none; }
+        .info-pill{
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: var(--card2);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--line);
+            color: var(--text);
+            box-shadow: 0 10px 40px rgba(0,0,0,.18);
+            font-size: 0.95rem;
+            letter-spacing: 0.6px;
+            white-space: nowrap;
+        }
+        .info-pill.sub{
+            color: var(--muted);
+            letter-spacing: 0.2px;
+            font-size: 0.90rem;
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text);
+            font-size: 1.05rem;
+            text-align: center;
+            z-index: 30;
+            padding: 18px 18px;
+            min-width: min(520px, calc(100vw - 36px));
+            border-radius: calc(var(--radius) + 6px);
+            background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+            border: 1px solid rgba(255,255,255,.12);
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow);
+        }
+        #loading .small{
+            display:block;
+            margin-top: 10px;
+            font-size: .9rem;
+            color: var(--muted);
+        }
+        #loading::before{
+            content:"";
+            display:block;
+            width: 34px;
+            height: 34px;
+            margin: 0 auto 10px;
+            border-radius: 999px;
+            border: 3px solid rgba(255,255,255,.20);
+            border-top-color: rgba(0,243,255,.85);
+            box-shadow: 0 0 18px rgba(0,243,255,.20);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin{ to{ transform: rotate(360deg); } }
+
+        .side-panel{
+            position: fixed;
+            top: 50%;
+            z-index: 25;
+            background: rgba(18, 18, 22, 0.55);
+            border: 1px solid rgba(255,255,255,0.14);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 16px 60px rgba(0,0,0,0.38);
+            border-radius: calc(var(--radius) + 6px);
+            padding: 12px 12px;
+            max-width: min(44vw, 520px);
+            transform: translateY(-50%);
+        }
+        #side-left{ left: 18px; --panel-btn-width: 170px; }
+        #side-right{ right: 18px; --panel-btn-width: 150px; }
+
+        .panel-head{
+            display:flex;
+            align-items:center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .panel-title{
+            color: rgba(255,255,255,.78);
+            font-size: .95rem;
+            letter-spacing: .6px;
+            white-space: nowrap;
+        }
+
+        .panel-body{ display:block; }
+        .side-panel[data-collapsed="true"]{
+            padding: 10px 10px;
+        }
+        .side-panel[data-collapsed="true"] .panel-body{ display:none; }
+        .side-panel[data-collapsed="true"]{
+            max-width: unset;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+        label{ color: rgba(255,255,255,.78); font-size: .95rem; }
+        .button-row{
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-wrap: nowrap;
+            align-items: stretch;
+        }
+        .chip{
+            appearance: none;
+            background: rgba(20, 20, 20, 0.60);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: var(--btn-accent);
+            padding: 10px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.30);
+        }
+        .side-panel .chip{
+            width: var(--panel-btn-width);
+            text-align: center;
+        }
+        .chip::before{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            transition: 0.55s;
+        }
+        .chip:hover{
+            background: var(--btn-accent);
+            color: #000;
+            box-shadow: 0 0 30px var(--btn-glow);
+            transform: translateY(-3px) scale(1.03);
+        }
+        .chip:hover::before{ left: 100%; }
+        .chip:active{ transform: translateY(2px) scale(0.97); }
+        .chip:focus-visible{
+            outline: none;
+            border-color: var(--btn-accent);
+            box-shadow: 0 0 0 3px var(--btn-ring);
+        }
+        .chip.active{
+            background: var(--btn-accent);
+            color: #000;
+            box-shadow: 0 0 30px var(--btn-glow);
+            border-color: rgba(255,255,255,0.16);
+        }
+        .chip.toggle{
+            width: auto;
+            padding: 8px 10px;
+            font-size: 0.88rem;
+            letter-spacing: 1.2px;
+        }
+        .side-panel .chip.toggle{ width: auto; }
+
+        @media (max-width: 520px){
+            #info{ width: calc(100vw - 18px); justify-content:center; }
+            .side-panel{ max-width: calc(100vw - 24px); }
+            .side-panel{ top: auto; transform: none; }
+            #side-left{ left: 12px; right: 12px; bottom: 86px; --panel-btn-width: 100%; }
+            #side-right{ left: 12px; right: 12px; bottom: 22px; --panel-btn-width: 100%; }
+        }
+    </style>
+    <!-- 使用 Import Map 引入 Three.js及其扩展 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="loading">
+        正在加载模型并生成粒子...
+        <span class="small">进度：<span id="progress">0%</span> · 当前：<span id="modelLabel">—</span></span>
+    </div>
+    <div id="info" style="display: none;">
+        <div class="info-pill">模型展现完毕</div>
+        <div class="info-pill sub">点击拖拽旋转，滚轮缩放预览</div>
+    </div>
+    
+    <!-- 左侧：模型切换（可收起） -->
+    <div id="side-left" class="side-panel" data-collapsed="false">
+        <div class="panel-head">
+            <div class="panel-title">模型</div>
+            <button id="toggleModelPanel" class="chip toggle" type="button" aria-expanded="true" title="收起">收</button>
+        </div>
+        <div class="panel-body">
+            <div class="button-row" id="modelButtons">
+                <button class="chip" type="button" data-model="悬挂新版.glb" aria-pressed="false" title="悬挂新版">悬挂</button>
+                <button class="chip" type="button" data-model="舵轮（新磁编码器支架）（第六版）.glb" aria-pressed="false" title="舵轮（新磁编码器支架）（第六版）">舵轮</button>
+                <button class="chip active" type="button" data-model="第三版完整底盘.glb" aria-pressed="true" title="第三版完整底盘">底盘</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧：灯光切换（可收起） -->
+    <div id="side-right" class="side-panel" data-collapsed="false">
+        <div class="panel-head">
+            <div class="panel-title">灯光</div>
+            <button id="toggleLightPanel" class="chip toggle" type="button" aria-expanded="true" title="收起">收</button>
+        </div>
+        <div class="panel-body">
+            <div class="button-row" id="lightButtons">
+                <button class="chip active" type="button" data-light="dark" aria-pressed="true">暗场光</button>
+                <button class="chip" type="button" data-light="studio" aria-pressed="false">工作室</button>
+                <button class="chip" type="button" data-light="photostudio" aria-pressed="false">摄影棚</button>
+                <button class="chip" type="button" data-light="shadowless" aria-pressed="false">无影棚</button>
+                <button class="chip" type="button" data-light="singlepoint" aria-pressed="false">单点光</button>
+                <button class="chip" type="button" data-light="softlight" aria-pressed="false">柔光照</button>
+                <button class="chip" type="button" data-light="daylight" aria-pressed="false">日光照</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+        import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // 轻量 Shader Pass（避免额外依赖 three/addons/postprocessing/ShaderPass.js）
+        class SimpleShaderPass {
+            constructor(material, textureID = 'tDiffuse') {
+                this.enabled = true;
+                this.needsSwap = true;
+                this.clear = false;
+                this.renderToScreen = false;
+
+                this.material = material;
+                this.textureID = textureID;
+
+                this._camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                this._scene = new THREE.Scene();
+                this._quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.material);
+                this._scene.add(this._quad);
+            }
+
+            render(renderer, writeBuffer, readBuffer) {
+                if (this.material.uniforms && this.material.uniforms[this.textureID]) {
+                    this.material.uniforms[this.textureID].value = readBuffer.texture;
+                }
+
+                renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer);
+                if (this.clear) renderer.clear();
+                renderer.render(this._scene, this._camera);
+            }
+
+            setSize() {}
+
+            dispose() {
+                this._quad.geometry.dispose();
+                this.material.dispose();
+            }
+        }
+
+        // --- 基础场景设置 ---
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.z = 40;
+
+        // 相机补光：让镜面/金属在“清晰模式”下也不至于没直射光就一片黑
+        const cameraFollowFillLight = new THREE.PointLight(0xffffff, 0.0);
+        cameraFollowFillLight.position.set(0, 0, 35);
+        camera.add(cameraFollowFillLight);
+        scene.add(camera);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000000, 0);
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        // 开启色调映射，修复金属材质过暗/过曝的问题
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        document.body.appendChild(renderer.domElement);
+
+        // RectAreaLight 需要初始化 uniforms（用于 Standard/Physical 材质）
+        RectAreaLightUniformsLib.init();
+
+        // 后处理：Bloom 让粒子更“惊艳”
+        // 这里使用“选择性 Bloom”：只让粒子进入 Bloom，模型本体不泛光
+        const BLOOM_LAYER = 1;
+
+        const bloomRenderScene = new RenderPass(scene, camera);
+        const finalRenderScene = new RenderPass(scene, camera);
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.2,  // strength
+            0.35, // radius
+            0.12  // threshold
+        );
+
+        const bloomComposer = new EffectComposer(renderer);
+        bloomComposer.renderToScreen = false;
+        bloomComposer.addPass(bloomRenderScene);
+        bloomComposer.addPass(bloomPass);
+
+        const finalCompositeMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                baseTexture: { value: null },
+                bloomTexture: { value: bloomComposer.renderTarget2.texture },
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D baseTexture;
+                uniform sampler2D bloomTexture;
+                varying vec2 vUv;
+                void main() {
+                    vec4 base = texture2D(baseTexture, vUv);
+                    vec4 bloom = texture2D(bloomTexture, vUv);
+                    // 关键：保留 base alpha，让 canvas 透明区域透出 CSS 背景
+                    vec3 rgb = base.rgb + bloom.rgb;
+                    gl_FragColor = vec4(rgb, base.a);
+                }
+            `,
+            transparent: true,
+        });
+        const finalPass = new SimpleShaderPass(finalCompositeMaterial, 'baseTexture');
+
+        const finalComposer = new EffectComposer(renderer);
+        finalComposer.addPass(finalRenderScene);
+        finalComposer.addPass(finalPass);
+
+        let bloomBaseStrength = bloomPass.strength;
+        let bloomBaseRadius = bloomPass.radius;
+        let bloomBaseThreshold = bloomPass.threshold;
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.5;
+
+        // --- 全局照明与环境反射设定配置 (解决模型发黑的问题) ---
+        // RoomEnvironment 生成的高质量真实环境反射，金属组件非常依赖这个
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        const roomEnvironmentMap = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+        scene.environment = roomEnvironmentMap; 
+
+        // 先声明：setLighting() 初始化时会调用 setEnvIntensity()，避免 TDZ 报错
+        let actualModel = null;
+
+        let currentLights = [];
+        let currentEnvIntensity = 0.8;
+
+        function setEnvIntensity(intensity) {
+            currentEnvIntensity = intensity;
+            if (!actualModel) return;
+            actualModel.traverse(child => {
+                if (!child.isMesh || !child.material) return;
+                applyMaterialState(child, (mat) => {
+                    if (!mat) return;
+                    if ('envMapIntensity' in mat) mat.envMapIntensity = intensity;
+                });
+            });
+        }
+        
+        function setLighting(mode) {
+            // 清理旧光源
+            currentLights.forEach(l => scene.remove(l));
+            currentLights = [];
+
+            // 同步网页背景氛围
+            document.documentElement.dataset.light = mode;
+
+            // 不用 scene.background（保持透明），让 CSS 背景成为画面底色
+            scene.background = null;
+
+            if (mode === 'dark') {
+                renderer.toneMappingExposure = 1.05;
+                bloomBaseStrength = 1.35;
+                bloomBaseRadius = 0.35;
+                bloomBaseThreshold = 0.08;
+                setEnvIntensity(0.90);
+                cameraFollowFillLight.intensity = 0.12;
+                const hemLight = new THREE.HemisphereLight(0x4a4a55, 0x001a33, 1.65);
+                const ambient = new THREE.AmbientLight(0x1a1a22, 0.65);
+                const dirLight = new THREE.DirectionalLight(0x00d2ff, 2);
+                dirLight.position.set(10, 20, 10);
+                const fill = new THREE.DirectionalLight(0x7c5cff, 1.2);
+                fill.position.set(-18, 14, -10);
+                const pointLight = new THREE.PointLight(0xff0055, 80);
+                pointLight.position.set(-10, -10, -10);
+                currentLights.push(hemLight, ambient, dirLight, fill, pointLight);
+            } else if (mode === 'studio') {
+                renderer.toneMappingExposure = 0.95;
+                bloomBaseStrength = 0.75;
+                bloomBaseRadius = 0.25;
+                bloomBaseThreshold = 0.12;
+                setEnvIntensity(1.05);
+                cameraFollowFillLight.intensity = 0.55;
+                const hemLight = new THREE.HemisphereLight(0xffffff, 0x888888, 1.0);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+                // 大软箱：用矩形面光替代“很尖的方向光”
+                const keySoftbox = new THREE.RectAreaLight(0xffffff, 10.0, 60, 36);
+                keySoftbox.position.set(40, 28, 50);
+                keySoftbox.lookAt(0, 0, 0);
+                const fillSoftbox = new THREE.RectAreaLight(0xdfe9ff, 6.0, 52, 28);
+                fillSoftbox.position.set(-46, 18, 34);
+                fillSoftbox.lookAt(0, 0, 0);
+                const rimSoftbox = new THREE.RectAreaLight(0xffffff, 7.0, 60, 24);
+                rimSoftbox.position.set(0, 18, -60);
+                rimSoftbox.lookAt(0, 0, 0);
+                currentLights.push(hemLight, ambient, keySoftbox, fillSoftbox, rimSoftbox);
+            } else if (mode === 'photostudio') {
+                // 摄影棚光：深灰背景，聚光灯强调轮廓和质感
+                renderer.toneMappingExposure = 0.98;
+                // 摄影棚以“清晰质感”为主，Bloom 更克制
+                bloomBaseStrength = 0.65;
+                bloomBaseRadius = 0.25;
+                bloomBaseThreshold = 0.14;
+                setEnvIntensity(1.15);
+                cameraFollowFillLight.intensity = 0.50;
+
+                const hemLight = new THREE.HemisphereLight(0xffffff, 0x111111, 0.45);
+                const ambient = new THREE.AmbientLight(0x0f0f12, 0.65);
+
+                // 大软箱主光：更大、更柔、更均匀
+                const keySoftbox = new THREE.RectAreaLight(0xffffff, 12.0, 72, 40);
+                keySoftbox.position.set(46, 30, 56);
+                keySoftbox.lookAt(0, 0, 0);
+
+                // 辅光软箱：弱一些，抬起暗部
+                const fillSoftbox = new THREE.RectAreaLight(0xe8f0ff, 6.5, 64, 30);
+                fillSoftbox.position.set(-58, 18, 40);
+                fillSoftbox.lookAt(0, 0, 0);
+
+                // 轮廓软箱：从后侧拉出边缘高光
+                const rimSoftbox = new THREE.RectAreaLight(0xffffff, 7.5, 70, 26);
+                rimSoftbox.position.set(-10, 20, -72);
+                rimSoftbox.lookAt(0, 0, 0);
+
+                currentLights.push(hemLight, ambient, keySoftbox, fillSoftbox, rimSoftbox);
+            } else if (mode === 'shadowless') {
+                // 无影棚光：到处都是高强度的均匀光照，纯白背景
+                renderer.toneMappingExposure = 0.85;
+                bloomBaseStrength = 0.35;
+                bloomBaseRadius = 0.15;
+                bloomBaseThreshold = 0.18;
+                setEnvIntensity(1.20);
+                cameraFollowFillLight.intensity = 0.65;
+                const hemLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 2.5);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.75);
+                const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.2);
+                dirLight1.position.set(20, 25, 10);
+                const dirLight2 = new THREE.DirectionalLight(0xffffff, 1.0);
+                dirLight2.position.set(-18, 18, -14);
+                const dirLight3 = new THREE.DirectionalLight(0xffffff, 0.7);
+                dirLight3.position.set(0, 12, -24);
+                currentLights.push(hemLight, ambient, dirLight1, dirLight2, dirLight3);
+            } else if (mode === 'singlepoint') {
+                // 单点自然光：强烈的一束光配合弱底光
+                renderer.toneMappingExposure = 1.05;
+                bloomBaseStrength = 1.0;
+                bloomBaseRadius = 0.30;
+                bloomBaseThreshold = 0.09;
+                setEnvIntensity(1.25);
+                cameraFollowFillLight.intensity = 0.60;
+                // 改成更“大”的光源：主光更宽更柔 + 辅助补光，适配更大的模型
+                const hem = new THREE.HemisphereLight(0xffffff, 0xe8eef6, 0.9);
+                const ambient = new THREE.AmbientLight(0x404040, 0.9);
+
+                const key = new THREE.SpotLight(0xfff0dd, 1200);
+                key.position.set(40, 55, 35);
+                key.angle = Math.PI / 3.4;     // 更宽
+                key.penumbra = 0.75;           // 更柔
+                key.distance = 260;
+                key.decay = 1.2;
+
+                const fill = new THREE.DirectionalLight(0xffffff, 1.15);
+                fill.position.set(-30, 20, -10);
+
+                const bounce = new THREE.DirectionalLight(0xfff7ee, 0.65);
+                bounce.position.set(0, -10, 18);
+
+                currentLights.push(hem, ambient, key, fill, bounce);
+            } else if (mode === 'softlight') {
+                // 柔光：灰色底色，温和的多重漫反射效果
+                renderer.toneMappingExposure = 0.95;
+                bloomBaseStrength = 0.55;
+                bloomBaseRadius = 0.22;
+                bloomBaseThreshold = 0.14;
+                setEnvIntensity(1.10);
+                cameraFollowFillLight.intensity = 0.55;
+                const hemLight = new THREE.HemisphereLight(0xffedd0, 0xcceeff, 1.5);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.65);
+                const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.5);
+                dirLight1.position.set(15, 25, 15);
+                const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.8);
+                dirLight2.position.set(-15, -15, -15);
+                currentLights.push(hemLight, ambient, dirLight1, dirLight2);
+            } else if (mode === 'daylight') {
+                renderer.toneMappingExposure = 1.0;
+                bloomBaseStrength = 0.60;
+                bloomBaseRadius = 0.22;
+                bloomBaseThreshold = 0.14;
+                setEnvIntensity(1.05);
+                cameraFollowFillLight.intensity = 0.45;
+                const hemLight = new THREE.HemisphereLight(0xffffff, 0x443333, 1.5);
+                const ambient = new THREE.AmbientLight(0xffffff, 0.45);
+                const sunLight = new THREE.DirectionalLight(0xffffee, 4.0);
+                sunLight.position.set(20, 50, 20);
+                currentLights.push(hemLight, ambient, sunLight);
+            }
+
+            bloomPass.strength = bloomBaseStrength;
+            bloomPass.radius = bloomBaseRadius;
+            bloomPass.threshold = bloomBaseThreshold;
+
+            currentLights.forEach(l => scene.add(l));
+            // 特殊模式下开启雾效增加层次感（白底模式不要黑雾）
+            scene.fog = (mode === 'dark' || mode === 'photostudio') ? new THREE.FogExp2(0x0a0a0e, 0.012) : null;
+        }
+
+        function setActiveButton(groupEl, selector, predicate) {
+            const buttons = Array.from(groupEl.querySelectorAll(selector));
+            for (const btn of buttons) {
+                const isActive = predicate(btn);
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            }
+        }
+
+        function getActiveData(groupEl, attrName) {
+            const active = groupEl.querySelector(`.chip.active[${attrName}]`);
+            return active ? active.getAttribute(attrName) : null;
+        }
+
+        // 初始化默认灯光（按钮组）
+        const lightButtons = document.getElementById('lightButtons');
+        const modelButtons = document.getElementById('modelButtons');
+
+        // 面板收起/展开
+        function setPanelCollapsed(panelEl, toggleBtn, collapsed) {
+            panelEl.dataset.collapsed = collapsed ? 'true' : 'false';
+            toggleBtn.textContent = collapsed ? '展' : '收';
+            toggleBtn.title = collapsed ? '展开' : '收起';
+            toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
+
+        const modelPanel = document.getElementById('side-left');
+        const lightPanel = document.getElementById('side-right');
+        const toggleModelPanel = document.getElementById('toggleModelPanel');
+        const toggleLightPanel = document.getElementById('toggleLightPanel');
+
+        toggleModelPanel.addEventListener('click', () => {
+            const collapsed = modelPanel.dataset.collapsed === 'true';
+            setPanelCollapsed(modelPanel, toggleModelPanel, !collapsed);
+        });
+        toggleLightPanel.addEventListener('click', () => {
+            const collapsed = lightPanel.dataset.collapsed === 'true';
+            setPanelCollapsed(lightPanel, toggleLightPanel, !collapsed);
+        });
+
+        const initialLight = getActiveData(lightButtons, 'data-light') || 'dark';
+        setLighting(initialLight);
+
+        // --- 模型与粒子系统变量 ---
+        const clock = new THREE.Clock();
+        const ease = 0.014; // 聚集速度（略降一点，配合旋涡更“丝滑”）
+        const MAX_PARTICLES = 90000;
+
+        const MODEL_FADE_SECONDS = 1.6;
+        const PARTICLE_FADE_SECONDS = 4.2;
+        const AFTERGLOW_SECONDS = 3.2;
+
+        function createParticleSpriteTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            g.addColorStop(0.00, 'rgba(255,255,255,1)');
+            g.addColorStop(0.20, 'rgba(255,255,255,0.85)');
+            g.addColorStop(0.45, 'rgba(255,255,255,0.22)');
+            g.addColorStop(1.00, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 128, 128);
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.needsUpdate = true;
+            return tex;
+        }
+
+        const particleSprite = createParticleSpriteTexture();
+
+        let particleSystem = null;
+        let targetPositions = [];
+        let particleCount = 0;
+        let showRealModelProgress = 0;
+        let particleSeed = null;
+        let particleOrbit = null;
+        let modelStartTime = 0;
+        let revealStartTime = 0;
+
+        const loader = new GLTFLoader();
+
+        function disposeMaterial(material) {
+            if (!material) return;
+            if (Array.isArray(material)) {
+                material.forEach(m => m && m.dispose && m.dispose());
+                return;
+            }
+            if (material.dispose) material.dispose();
+        }
+
+        function disposeObject3D(object3d) {
+            if (!object3d) return;
+            object3d.traverse(child => {
+                if (child.isMesh) {
+                    if (child.geometry) child.geometry.dispose();
+                    disposeMaterial(child.material);
+                }
+            });
+        }
+
+        function applyMaterialState(mesh, fn) {
+            if (!mesh.material) return;
+            const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            materials.forEach((m, idx) => fn(m, idx));
+        }
+
+        function loadModel(filename) {
+            document.getElementById('modelLabel').innerText = filename;
+            document.getElementById('progress').innerText = '0%';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('info').style.display = 'none';
+
+            // 清理旧的模型和场景中的旧粒子
+            if (actualModel) {
+                scene.remove(actualModel);
+                disposeObject3D(actualModel);
+            }
+            if (particleSystem) {
+                scene.remove(particleSystem);
+                particleSystem.geometry.dispose();
+                particleSystem.material.dispose();
+            }
+
+            actualModel = null;
+            particleSystem = null;
+            showRealModelProgress = 0;
+            particleSeed = null;
+            particleOrbit = null;
+            modelStartTime = 0;
+            revealStartTime = 0;
+
+            const modelUrl = encodeURI('./' + filename);
+
+            loader.load(modelUrl, (gltf) => {
+                actualModel = gltf.scene;
+
+                // 先应用当前环境反射强度，避免某些金属材质过亮导致看不清
+                setEnvIntensity(currentEnvIntensity);
+
+                // 1) 采样模型表面顶点（避免超大模型导致粒子过多卡顿）
+                let totalVertexCount = 0;
+                actualModel.traverse((child) => {
+                    if (!child.isMesh) return;
+                    const posAttr = child.geometry?.attributes?.position;
+                    if (!posAttr) return;
+                    totalVertexCount += posAttr.count;
+                });
+                const sampleStep = Math.max(1, Math.ceil(totalVertexCount / MAX_PARTICLES));
+
+                const vertices = [];
+                const vector = new THREE.Vector3();
+                actualModel.traverse((child) => {
+                    if (!child.isMesh) return;
+                    child.updateMatrixWorld();
+
+                    // 强制修复某些导入材质发黑、双面渲染等问题，并先设为透明用于“显现”动画
+                    applyMaterialState(child, (mat) => {
+                        if (!mat) return;
+                        if (!child.userData._matState) child.userData._matState = [];
+                        child.userData._matState.push({
+                            transparent: mat.transparent,
+                            opacity: mat.opacity,
+                            side: mat.side,
+                            depthWrite: mat.depthWrite,
+                        });
+                        mat.side = THREE.DoubleSide;
+                        mat.transparent = true;
+                        mat.opacity = 0;
+                        mat.depthWrite = true;
+                    });
+
+                    const positionAttribute = child.geometry?.attributes?.position;
+                    if (!positionAttribute) return;
+
+                    const matrixWorld = child.matrixWorld;
+                    for (let i = 0; i < positionAttribute.count; i += sampleStep) {
+                        vector.fromBufferAttribute(positionAttribute, i);
+                        vector.applyMatrix4(matrixWorld);
+                        vertices.push(vector.x, vector.y, vector.z);
+                    }
+                });
+
+                // 2. 居中与缩放模型结构
+                const box = new THREE.Box3().setFromObject(actualModel);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 25 / maxDim; // 调整一个舒适的视距比例
+                
+                actualModel.position.sub(center);
+                actualModel.position.multiplyScalar(scale);
+                actualModel.scale.set(scale, scale, scale);
+                scene.add(actualModel);
+
+                // 根据采样顶点映射到缩放空间
+                targetPositions = new Float32Array(vertices.length);
+                for(let i=0; i<vertices.length; i+=3) {
+                    targetPositions[i] = (vertices[i] - center.x) * scale;
+                    targetPositions[i+1] = (vertices[i+1] - center.y) * scale;
+                    targetPositions[i+2] = (vertices[i+2] - center.z) * scale;
+                }
+
+                particleCount = targetPositions.length / 3;
+
+                // 每个粒子的随机参数（旋涡/抖动）
+                particleSeed = new Float32Array(particleCount);
+                particleOrbit = new Float32Array(particleCount);
+                for (let i = 0; i < particleCount; i++) {
+                    particleSeed[i] = Math.random();
+                    particleOrbit[i] = Math.random();
+                }
+
+                // 3. 构建起飞的粒子
+                const currentPositions = new Float32Array(targetPositions.length);
+                const colors = new Float32Array(targetPositions.length);
+                const boundingRadius = 250; // 初生点云范围
+                const colorObj = new THREE.Color();
+
+                for (let i = 0; i < particleCount; i++) {
+                    currentPositions[i * 3] = (Math.random() - 0.5) * boundingRadius;
+                    currentPositions[i * 3 + 1] = (Math.random() - 0.5) * boundingRadius;
+                    currentPositions[i * 3 + 2] = (Math.random() - 0.5) * boundingRadius;
+
+                    // 粒子的颜色可以随机产生一些科幻光效
+                    colorObj.setHSL(0.5 + Math.random() * 0.15, 0.9, 0.6); 
+                    colors[i * 3] = colorObj.r;
+                    colors[i * 3 + 1] = colorObj.g;
+                    colors[i * 3 + 2] = colorObj.b;
+                }
+
+                const particlesGeometry = new THREE.BufferGeometry();
+                particlesGeometry.setAttribute('position', new THREE.BufferAttribute(currentPositions, 3));
+                particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+                const particleMaterial = new THREE.PointsMaterial({
+                    size: 0.18,
+                    vertexColors: true,
+                    map: particleSprite,
+                    alphaMap: particleSprite,
+                    blending: THREE.AdditiveBlending,
+                    transparent: true,
+                    opacity: 0.8,
+                    depthWrite: false
+                });
+
+                particleSystem = new THREE.Points(particlesGeometry, particleMaterial);
+                // 粒子进入 Bloom Layer（同时保留在默认 Layer 让基础渲染可见）
+                particleSystem.layers.enable(BLOOM_LAYER);
+                scene.add(particleSystem);
+
+                modelStartTime = clock.getElapsedTime();
+                revealStartTime = 0;
+
+                document.getElementById('loading').style.display = 'none';
+
+            }, (xhr) => {
+                const total = Number(xhr.total || 0);
+                const loaded = Number(xhr.loaded || 0);
+                if (total > 0) {
+                    const percent = Math.round((loaded / total) * 100);
+                    document.getElementById('progress').innerText = `${percent}%`;
+                } else {
+                    const mb = (loaded / (1024 * 1024));
+                    document.getElementById('progress').innerText = Number.isFinite(mb) ? `${mb.toFixed(1)}MB` : '加载中…';
+                }
+            }, (error) => {
+                console.error('模型加载出错:', error);
+                document.getElementById('loading').innerHTML = '模型加载失败，请检查控制台。';
+            });
+        }
+
+        // --- 事件监听（按钮组直接切换） ---
+        modelButtons.addEventListener('click', (e) => {
+            const btn = e.target && e.target.closest && e.target.closest('button[data-model]');
+            if (!btn) return;
+            const filename = btn.getAttribute('data-model');
+            setActiveButton(modelButtons, 'button[data-model]', (b) => b === btn);
+            loadModel(filename);
+        });
+
+        lightButtons.addEventListener('click', (e) => {
+            const btn = e.target && e.target.closest && e.target.closest('button[data-light]');
+            if (!btn) return;
+            const mode = btn.getAttribute('data-light');
+            setActiveButton(lightButtons, 'button[data-light]', (b) => b === btn);
+            setLighting(mode);
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            bloomComposer.setSize(window.innerWidth, window.innerHeight);
+            finalComposer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 初始加载所选模型（按钮组）
+        const initialModel = getActiveData(modelButtons, 'data-model') || '第三版完整底盘.glb';
+        loadModel(initialModel);
+
+        // --- 核心渲染与动画逻辑 ---
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+            
+            if (particleSystem && actualModel) {
+                const positions = particleSystem.geometry.attributes.position.array;
+                let maxDist = 0;
+                const tModel = modelStartTime ? (time - modelStartTime) : 0;
+                const gather = Math.min(1, tModel / 4.2); // 旋涡汇聚的阶段进度
+                
+                // 粒子飞向目标位置算法
+                for (let i = 0; i < particleCount; i++) {
+                    const ix = i * 3;
+                    const iy = i * 3 + 1;
+                    const iz = i * 3 + 2;
+
+                    const tx = targetPositions[ix];
+                    const ty = targetPositions[iy];
+                    const tz = targetPositions[iz];
+
+                    const seed = particleSeed ? particleSeed[i] : 0.5;
+                    const orbit = particleOrbit ? particleOrbit[i] : 0.5;
+
+                    // 轻微的“火花抖动”与“呼吸”
+                    const noiseAmp = (1 - gather) * (0.05 + orbit * 0.07);
+                    const noiseX = Math.sin(time * (2.0 + orbit) + seed * 50) * noiseAmp;
+                    const noiseY = Math.cos(time * (2.2 + orbit) + seed * 40) * noiseAmp;
+                    const noiseZ = Math.sin(time * (2.4 + orbit) + seed * 60) * noiseAmp;
+
+                    // 旋涡：围绕 y 轴转动，越接近收敛越弱
+                    const px = positions[ix];
+                    const py = positions[iy];
+                    const pz = positions[iz];
+                    const swirl = (1 - gather) * (1 - showRealModelProgress) * (0.002 + orbit * 0.006);
+                    const swirlX = -pz;
+                    const swirlZ = px;
+
+                    // 吸引到目标（前期偏慢，后期加速）
+                    const attract = ease * (0.35 + 0.85 * gather);
+                    positions[ix] += (tx - px) * attract + noiseX + swirlX * swirl;
+                    positions[iy] += (ty - py) * attract + noiseY + Math.sin(time * 2.8 + seed * 30) * (1 - gather) * 0.03;
+                    positions[iz] += (tz - pz) * attract + noiseZ + swirlZ * swirl;
+
+                    const dx = positions[ix] - tx;
+                    const dy = positions[iy] - ty;
+                    const dz = positions[iz] - tz;
+                    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                    if (dist > maxDist) maxDist = dist;
+                }
+                particleSystem.geometry.attributes.position.needsUpdate = true;
+
+                // 实体模型浮现与粒子消失阶段
+                const shouldReveal = (maxDist < 2.0) || (tModel > 5.0);
+                if (shouldReveal) {
+                    if (!revealStartTime) {
+                        revealStartTime = time;
+                        document.getElementById('info').style.display = 'flex';
+                    }
+
+                    const tReveal = Math.max(0, time - revealStartTime);
+                    const modelFade = Math.min(1, tReveal / MODEL_FADE_SECONDS);
+                    const particleFade = Math.min(1, tReveal / PARTICLE_FADE_SECONDS);
+                    showRealModelProgress = modelFade;
+
+                    if (modelFade >= 1) {
+                        // 组装完成后，尝试将材质恢复为它原本的状态，关闭额外强制开启的透明属性从而避免显示层级BUG
+                        actualModel.traverse(child => {
+                            if(!child.isMesh || !child.material) return;
+                            const states = child.userData._matState;
+                            applyMaterialState(child, (mat, idx) => {
+                                if (!mat) return;
+                                const st = states && states[idx] ? states[idx] : null;
+                                if (!st) return;
+                                mat.transparent = st.transparent;
+                                mat.opacity = st.opacity;
+                                mat.side = st.side;
+                                mat.depthWrite = st.depthWrite;
+                            });
+                        });
+                    } else {
+                        // 正在淡入阶段
+                        actualModel.traverse(child => {
+                            if(!child.isMesh || !child.material) return;
+                            applyMaterialState(child, (mat) => {
+                                if (!mat) return;
+                                mat.opacity = modelFade;
+                            });
+                        });
+                    }
+
+                    // 粒子更慢地淡出，给“余辉”留时间
+                    particleSystem.material.opacity = Math.max(0, 0.8 * (1 - particleFade));
+                }
+
+                // 聚合阶段稍微提高 Bloom 强度，显现后回落（注意：不能每帧累加）
+                const bloomBoost = (1 - gather) * (1 - showRealModelProgress) * 0.25;
+                let afterglow = 0;
+                if (revealStartTime) {
+                    const tGlow = Math.max(0, time - revealStartTime);
+                    const g = Math.max(0, 1 - (tGlow / AFTERGLOW_SECONDS));
+                    // 余辉更明显：一开始亮一点，随后平滑衰减
+                    afterglow = g * g * 0.55;
+                }
+                bloomPass.strength = bloomBaseStrength + bloomBoost + afterglow;
+            }
+            
+            controls.update();
+            // 先只渲染粒子的 Bloom，再渲染完整场景并合成
+            camera.layers.set(BLOOM_LAYER);
+            bloomComposer.render();
+            camera.layers.set(0);
+            finalComposer.render();
+        }
+
+        animate();
+    </script>
+</body>
+</html>

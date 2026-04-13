@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高保真粒子效果模型展示</title>
+    <title>TDPS——PEGASUS</title>
     <style>
         :root{
             --bg: #0b1020;
@@ -23,6 +23,7 @@
             --btn-accent: var(--accent2);
             --btn-glow: rgba(0, 243, 255, 0.35);
             --btn-ring: rgba(0, 243, 255, 0.18);
+            --btn-on-accent: #000;
         }
 
         *{ box-sizing: border-box; }
@@ -82,6 +83,7 @@
             --btn-accent: var(--accent);
             --btn-glow: rgba(124, 92, 255, 0.28);
             --btn-ring: rgba(124, 92, 255, 0.18);
+            --btn-on-accent: #fff;
             --bg:#f6f7fb;
             --grid: rgba(0,0,0,.06);
             --text: rgba(0,0,0,.88);
@@ -100,9 +102,11 @@
             background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, auto;
         }
         html[data-light="shadowless"] body{
-            --btn-accent: var(--accent);
-            --btn-glow: rgba(124, 92, 255, 0.22);
-            --btn-ring: rgba(124, 92, 255, 0.16);
+            /* 无影棚：更“干净”的黑白工业感 */
+            --btn-accent: var(--text);
+            --btn-glow: rgba(0, 0, 0, 0.18);
+            --btn-ring: rgba(0, 0, 0, 0.12);
+            --btn-on-accent: #fff;
             --bg:#ffffff;
             --grid: rgba(0,0,0,.05);
             --text: rgba(0,0,0,.88);
@@ -120,9 +124,11 @@
             background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px, auto;
         }
         html[data-light="softlight"] body{
-            --btn-accent: var(--accent);
-            --btn-glow: rgba(124, 92, 255, 0.22);
-            --btn-ring: rgba(124, 92, 255, 0.16);
+            /* 柔光：偏暖 */
+            --btn-accent: rgba(255, 178, 122, 0.95);
+            --btn-glow: rgba(255, 178, 122, 0.26);
+            --btn-ring: rgba(255, 178, 122, 0.16);
+            --btn-on-accent: #000;
             --bg:#f0f1f5;
             --grid: rgba(0,0,0,.05);
             --text: rgba(0,0,0,.88);
@@ -141,9 +147,11 @@
             background-size: 100% 100%, 100% 100%, 100% 100%, 72px 72px, 72px 72px, auto;
         }
         html[data-light="daylight"] body{
-            --btn-accent: var(--accent3);
-            --btn-glow: rgba(34, 197, 94, 0.25);
-            --btn-ring: rgba(34, 197, 94, 0.16);
+            /* 日光：更“通透”的高亮按钮，更贴合天空底色 */
+            --btn-accent: rgba(255,255,255,.92);
+            --btn-glow: rgba(255,255,255,.22);
+            --btn-ring: rgba(255,255,255,.14);
+            --btn-on-accent: #000;
             --bg:#87CEEB;
             --grid: rgba(255,255,255,.12);
             color: rgba(255,255,255,.95);
@@ -157,9 +165,11 @@
             background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px, 100% 100%, auto;
         }
         html[data-light="photostudio"] body{
-            --btn-accent: var(--accent2);
-            --btn-glow: rgba(0, 243, 255, 0.35);
-            --btn-ring: rgba(0, 243, 255, 0.18);
+            /* 摄影棚：偏霓虹洋红/青，按钮用洋红更贴合氛围 */
+            --btn-accent: rgba(255, 0, 110, 0.95);
+            --btn-glow: rgba(255, 0, 110, 0.28);
+            --btn-ring: rgba(255, 0, 110, 0.18);
+            --btn-on-accent: #fff;
             --bg:#07070a;
             --grid: rgba(255,255,255,.04);
             background:
@@ -172,9 +182,11 @@
             background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, auto;
         }
         html[data-light="singlepoint"] body{
-            --btn-accent: var(--accent);
-            --btn-glow: rgba(124, 92, 255, 0.22);
-            --btn-ring: rgba(124, 92, 255, 0.16);
+            /* 单点自然光：更偏暖的“窗光” */
+            --btn-accent: rgba(255, 210, 170, 0.96);
+            --btn-glow: rgba(255, 210, 170, 0.26);
+            --btn-ring: rgba(255, 210, 170, 0.16);
+            --btn-on-accent: #000;
             /* 单点自然光：也用白底，更接近“室外自然/室内窗光”观感 */
             --bg:#ffffff;
             --grid: rgba(0,0,0,.05);
@@ -210,7 +222,7 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            pointer-events: none;
+            pointer-events: auto;
             z-index: 10;
             max-width: calc(100vw - 18px);
             overflow-x: auto;
@@ -218,6 +230,7 @@
             scrollbar-width: none;
         }
         #info::-webkit-scrollbar{ display:none; }
+        #info .lang-toggle{ pointer-events: auto; }
         .info-pill{
             padding: 10px 12px;
             border-radius: 999px;
@@ -229,6 +242,7 @@
             font-size: 0.95rem;
             letter-spacing: 0.6px;
             white-space: nowrap;
+            pointer-events: none;
         }
         .info-pill.sub{
             color: var(--muted);
@@ -286,8 +300,8 @@
             max-width: min(44vw, 520px);
             transform: translateY(-50%);
         }
-        #side-left{ left: 18px; --panel-btn-width: 170px; }
-        #side-right{ right: 18px; --panel-btn-width: 150px; }
+        #side-left{ left: 18px; --panel-btn-width: 150px; }
+        #side-right{ right: 18px; --panel-btn-width: 138px; }
 
         .panel-head{
             display:flex;
@@ -359,7 +373,7 @@
         }
         .chip:hover{
             background: var(--btn-accent);
-            color: #000;
+            color: var(--btn-on-accent);
             box-shadow: 0 0 30px var(--btn-glow);
             transform: translateY(-3px) scale(1.03);
         }
@@ -372,7 +386,7 @@
         }
         .chip.active{
             background: var(--btn-accent);
-            color: #000;
+            color: var(--btn-on-accent);
             box-shadow: 0 0 30px var(--btn-glow);
             border-color: rgba(255,255,255,0.16);
         }
@@ -404,25 +418,29 @@
 </head>
 <body>
     <div id="loading">
-        正在加载模型并生成粒子...
-        <span class="small">进度：<span id="progress">0%</span> · 当前：<span id="modelLabel">—</span></span>
+        <div id="loadingTitle" data-i18n="loadingTitle">Loading model & generating particles...</div>
+        <span id="loadingMeta" class="small">
+            <span data-i18n="progressLabel">Progress:</span> <span id="progress">0%</span> ·
+            <span data-i18n="currentLabel">Model:</span> <span id="modelLabel">—</span>
+        </span>
     </div>
     <div id="info" style="display: none;">
-        <div class="info-pill">模型展现完毕</div>
-        <div class="info-pill sub">点击拖拽旋转，滚轮缩放预览</div>
+        <div id="infoMain" class="info-pill" data-i18n="infoMain">Model revealed</div>
+        <div id="infoHint" class="info-pill sub" data-i18n="infoHint">Drag to rotate, scroll to zoom</div>
+        <button id="langToggle" class="chip toggle lang-toggle" type="button" aria-pressed="false" title="Switch to Chinese">ZH</button>
     </div>
     
     <!-- 左侧：模型切换（可收起） -->
     <div id="side-left" class="side-panel" data-collapsed="false">
         <div class="panel-head">
-            <div class="panel-title">模型</div>
-            <button id="toggleModelPanel" class="chip toggle" type="button" aria-expanded="true" title="收起">收</button>
+            <div id="panelModelsTitle" class="panel-title" data-i18n="panelModels">Models</div>
+            <button id="toggleModelPanel" class="chip toggle" type="button" aria-expanded="true" title="Collapse">–</button>
         </div>
         <div class="panel-body">
             <div class="button-row" id="modelButtons">
-                <button class="chip" type="button" data-model="悬挂新版.glb" aria-pressed="false" title="悬挂新版">悬挂</button>
-                <button class="chip" type="button" data-model="舵轮（新磁编码器支架）（第六版）.glb" aria-pressed="false" title="舵轮（新磁编码器支架）（第六版）">舵轮</button>
-                <button class="chip active" type="button" data-model="第三版完整底盘.glb" aria-pressed="true" title="第三版完整底盘">底盘</button>
+                <button class="chip" type="button" data-model="悬挂新版.glb" data-model-key="suspension" data-i18n="model.suspension" data-i18n-title="model.suspensionTitle" aria-pressed="false" title="Suspension">Suspension</button>
+                <button class="chip" type="button" data-model="舵轮（新磁编码器支架）（第六版）.glb" data-model-key="swerve" data-i18n="model.swerve" data-i18n-title="model.swerveTitle" aria-pressed="false" title="Swerve">Swerve</button>
+                <button class="chip active" type="button" data-model="第三版完整底盘.glb" data-model-key="chassis" data-i18n="model.chassis" data-i18n-title="model.chassisTitle" aria-pressed="true" title="Chassis">Chassis</button>
             </div>
         </div>
     </div>
@@ -430,18 +448,18 @@
     <!-- 右侧：灯光切换（可收起） -->
     <div id="side-right" class="side-panel" data-collapsed="false">
         <div class="panel-head">
-            <div class="panel-title">灯光</div>
-            <button id="toggleLightPanel" class="chip toggle" type="button" aria-expanded="true" title="收起">收</button>
+            <div id="panelLightsTitle" class="panel-title" data-i18n="panelLights">Lighting</div>
+            <button id="toggleLightPanel" class="chip toggle" type="button" aria-expanded="true" title="Collapse">–</button>
         </div>
         <div class="panel-body">
             <div class="button-row" id="lightButtons">
-                <button class="chip active" type="button" data-light="dark" aria-pressed="true">暗场光</button>
-                <button class="chip" type="button" data-light="studio" aria-pressed="false">工作室</button>
-                <button class="chip" type="button" data-light="photostudio" aria-pressed="false">摄影棚</button>
-                <button class="chip" type="button" data-light="shadowless" aria-pressed="false">无影棚</button>
-                <button class="chip" type="button" data-light="singlepoint" aria-pressed="false">单点光</button>
-                <button class="chip" type="button" data-light="softlight" aria-pressed="false">柔光照</button>
-                <button class="chip" type="button" data-light="daylight" aria-pressed="false">日光照</button>
+                <button class="chip active" type="button" data-light="dark" data-i18n="light.dark" aria-pressed="true">Dark Neon</button>
+                <button class="chip" type="button" data-light="studio" data-i18n="light.studio" aria-pressed="false">Studio</button>
+                <button class="chip" type="button" data-light="photostudio" data-i18n="light.photostudio" aria-pressed="false">Photo Studio</button>
+                <button class="chip" type="button" data-light="shadowless" data-i18n="light.shadowless" aria-pressed="false">Shadowless</button>
+                <button class="chip" type="button" data-light="singlepoint" data-i18n="light.singlepoint" aria-pressed="false">Single Point</button>
+                <button class="chip" type="button" data-light="softlight" data-i18n="light.softlight" aria-pressed="false">Soft Light</button>
+                <button class="chip" type="button" data-light="daylight" data-i18n="light.daylight" aria-pressed="false">Daylight</button>
             </div>
         </div>
     </div>
@@ -775,18 +793,150 @@
         const lightButtons = document.getElementById('lightButtons');
         const modelButtons = document.getElementById('modelButtons');
 
+        // --- i18n (default EN) ---
+        const I18N = {
+            en: {
+                loadingTitle: 'Loading model & generating particles...',
+                progressLabel: 'Progress:',
+                currentLabel: 'Model:',
+                infoMain: 'Model revealed',
+                infoHint: 'Drag to rotate, scroll to zoom',
+                panelModels: 'Models',
+                panelLights: 'Lighting',
+                toggleCollapse: 'Collapse',
+                toggleExpand: 'Expand',
+                langToggleTitle: 'Switch to Chinese',
+                loadingUnknown: 'Loading…',
+                loadFail: 'Model load failed. Please check the console.',
+
+                'model.suspension': 'Suspension',
+                'model.suspensionTitle': 'Suspension',
+                'model.swerve': 'Swerve',
+                'model.swerveTitle': 'Swerve',
+                'model.chassis': 'Chassis',
+                'model.chassisTitle': 'Chassis',
+
+                'light.dark': 'Dark Neon',
+                'light.studio': 'Studio',
+                'light.photostudio': 'Photo Studio',
+                'light.shadowless': 'Shadowless',
+                'light.singlepoint': 'Single Point',
+                'light.softlight': 'Soft Light',
+                'light.daylight': 'Daylight',
+            },
+            zh: {
+                loadingTitle: '正在加载模型并生成粒子...',
+                progressLabel: '进度：',
+                currentLabel: '当前：',
+                infoMain: '模型展现完毕',
+                infoHint: '点击拖拽旋转，滚轮缩放预览',
+                panelModels: '模型',
+                panelLights: '灯光',
+                toggleCollapse: '收起',
+                toggleExpand: '展开',
+                langToggleTitle: '切换到英文',
+                loadingUnknown: '加载中…',
+                loadFail: '模型加载失败，请检查控制台。',
+
+                'model.suspension': '悬挂',
+                'model.suspensionTitle': '悬挂新版',
+                'model.swerve': '舵轮',
+                'model.swerveTitle': '舵轮（新磁编码器支架）（第六版）',
+                'model.chassis': '底盘',
+                'model.chassisTitle': '第三版完整底盘',
+
+                'light.dark': '暗场光',
+                'light.studio': '工作室',
+                'light.photostudio': '摄影棚',
+                'light.shadowless': '无影棚',
+                'light.singlepoint': '单点光',
+                'light.softlight': '柔光照',
+                'light.daylight': '日光照',
+            }
+        };
+
+        let currentLang = 'en';
+        let currentModelFile = null;
+
+        function t(key) {
+            const dict = I18N[currentLang] || I18N.en;
+            return (key in dict) ? dict[key] : (I18N.en[key] ?? key);
+        }
+
+        function getModelKeyByFilename(filename) {
+            const buttons = modelButtons.querySelectorAll('button[data-model]');
+            for (const btn of buttons) {
+                if (btn.getAttribute('data-model') === filename) return btn.dataset.modelKey || null;
+            }
+            return null;
+        }
+
+        function updateModelLabel(filename) {
+            const key = getModelKeyByFilename(filename);
+            const label = key ? t(`model.${key}`) : filename;
+            const modelLabelEl = document.getElementById('modelLabel');
+            if (modelLabelEl) modelLabelEl.innerText = label;
+        }
+
         // 面板收起/展开
         function setPanelCollapsed(panelEl, toggleBtn, collapsed) {
             panelEl.dataset.collapsed = collapsed ? 'true' : 'false';
-            toggleBtn.textContent = collapsed ? '展' : '收';
-            toggleBtn.title = collapsed ? '展开' : '收起';
+            toggleBtn.textContent = collapsed ? '+' : '–';
+            toggleBtn.title = collapsed ? t('toggleExpand') : t('toggleCollapse');
             toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        }
+
+        function applyI18nToDom() {
+            document.documentElement.lang = (currentLang === 'zh') ? 'zh-CN' : 'en';
+
+            for (const el of document.querySelectorAll('[data-i18n]')) {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            }
+            for (const el of document.querySelectorAll('[data-i18n-title]')) {
+                const key = el.getAttribute('data-i18n-title');
+                el.title = t(key);
+            }
+
+            const langToggle = document.getElementById('langToggle');
+            if (langToggle) {
+                const nextIsZh = currentLang === 'en';
+                langToggle.textContent = nextIsZh ? 'ZH' : 'EN';
+                langToggle.title = t('langToggleTitle');
+                langToggle.setAttribute('aria-pressed', currentLang === 'zh' ? 'true' : 'false');
+            }
+
+            const modelPanel = document.getElementById('side-left');
+            const lightPanel = document.getElementById('side-right');
+            const toggleModelPanel = document.getElementById('toggleModelPanel');
+            const toggleLightPanel = document.getElementById('toggleLightPanel');
+            if (modelPanel && toggleModelPanel) {
+                setPanelCollapsed(modelPanel, toggleModelPanel, modelPanel.dataset.collapsed === 'true');
+            }
+            if (lightPanel && toggleLightPanel) {
+                setPanelCollapsed(lightPanel, toggleLightPanel, lightPanel.dataset.collapsed === 'true');
+            }
+
+            if (currentModelFile) {
+                updateModelLabel(currentModelFile);
+            }
+
+            const loadingTitle = document.getElementById('loadingTitle');
+            if (loadingTitle) loadingTitle.textContent = t('loadingTitle');
         }
 
         const modelPanel = document.getElementById('side-left');
         const lightPanel = document.getElementById('side-right');
         const toggleModelPanel = document.getElementById('toggleModelPanel');
         const toggleLightPanel = document.getElementById('toggleLightPanel');
+
+        const langToggle = document.getElementById('langToggle');
+        if (langToggle) {
+            langToggle.addEventListener('click', () => {
+                currentLang = (currentLang === 'en') ? 'zh' : 'en';
+                applyI18nToDom();
+            });
+        }
 
         toggleModelPanel.addEventListener('click', () => {
             const collapsed = modelPanel.dataset.collapsed === 'true';
@@ -796,6 +946,9 @@
             const collapsed = lightPanel.dataset.collapsed === 'true';
             setPanelCollapsed(lightPanel, toggleLightPanel, !collapsed);
         });
+
+        // Apply default language (EN) to all UI
+        applyI18nToDom();
 
         const initialLight = getActiveData(lightButtons, 'data-light') || 'dark';
         setLighting(initialLight);
@@ -865,10 +1018,16 @@
         }
 
         function loadModel(filename) {
-            document.getElementById('modelLabel').innerText = filename;
+            currentModelFile = filename;
+            updateModelLabel(filename);
             document.getElementById('progress').innerText = '0%';
             document.getElementById('loading').style.display = 'block';
             document.getElementById('info').style.display = 'none';
+
+            const loadingTitle = document.getElementById('loadingTitle');
+            const loadingMeta = document.getElementById('loadingMeta');
+            if (loadingTitle) loadingTitle.textContent = t('loadingTitle');
+            if (loadingMeta) loadingMeta.style.display = 'block';
 
             // 清理旧的模型和场景中的旧粒子
             if (actualModel) {
@@ -1021,11 +1180,14 @@
                     document.getElementById('progress').innerText = `${percent}%`;
                 } else {
                     const mb = (loaded / (1024 * 1024));
-                    document.getElementById('progress').innerText = Number.isFinite(mb) ? `${mb.toFixed(1)}MB` : '加载中…';
+                    document.getElementById('progress').innerText = Number.isFinite(mb) ? `${mb.toFixed(1)}MB` : t('loadingUnknown');
                 }
             }, (error) => {
-                console.error('模型加载出错:', error);
-                document.getElementById('loading').innerHTML = '模型加载失败，请检查控制台。';
+                console.error('Model load error:', error);
+                const loadingTitle = document.getElementById('loadingTitle');
+                const loadingMeta = document.getElementById('loadingMeta');
+                if (loadingTitle) loadingTitle.textContent = t('loadFail');
+                if (loadingMeta) loadingMeta.style.display = 'none';
             });
         }
 

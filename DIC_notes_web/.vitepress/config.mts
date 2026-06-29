@@ -132,6 +132,7 @@ const groupedSidebar = [
 ]
 
 export default defineConfig({
+  base: '/dic/',
   title: 'Design of Integrated Circuits',
   description: 'DIC lecture notes',
   cleanUrls: false,

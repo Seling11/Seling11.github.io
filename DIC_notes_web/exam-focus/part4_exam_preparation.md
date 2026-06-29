@@ -1,6 +1,6 @@
 # Part 4 考点版：Exam Preparation
 
-> 对应 P4-L1 到 P4-L2。  
+> 对应新款 grouped notes：Lecture 4.1 到 Lecture 4.2。  
 > Part 4 不是新知识点，而是把 Part 1-3 变成能直接写在卷子上的答题模板。
 
 ## 1. 试卷结构
@@ -318,4 +318,3 @@ requires accurate residue processing.
 5. latch-up / antenna effect；
 6. mixed-signal design flow；
 7. Flash vs Pipeline ADC。
-

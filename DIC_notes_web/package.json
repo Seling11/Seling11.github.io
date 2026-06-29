@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vitepress dev --host 127.0.0.1",
     "build": "vitepress build",
+    "export-pdf": "node scripts/export-exam-focus-pdf.mjs",
     "preview": "vitepress preview --host 127.0.0.1"
   },
   "dependencies": {

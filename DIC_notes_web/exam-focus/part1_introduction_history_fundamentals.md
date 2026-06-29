@@ -1,19 +1,16 @@
 # Part 1 考点版：Introduction, History & Fundamentals
 
-> 对应 P1-L1 到 P1-L7。  
+> 对应新款 grouped notes：Lecture 1.1 到 Lecture 1.4。  
 > Part 1 不太像纯计算大题的主战场，但它支撑三类高频题：设计流程（design flow）、MOS/CMOS 计算、模拟/数字接口解释。
 
 ## 1. Part 1 到底怎么考
 
-| Lecture | 考试价值 | 常见考法 |
+| 新款笔记位置 | 考试价值 | 常见考法 |
 |---|---|---|
-| P1-L1 课程框架 | 低直接考点 | 支撑 IC 完整开发流程的表述。 |
-| P1-L2 半导体历史 | 很低 | 四年真题没有直接问历史。 |
-| P1-L3 数量级与 dB | 很低 | 四年真题没有直接问 dB/单位换算。 |
-| P1-L4 设计流程 | 高 | 画/解释 mixed-signal IC design process，解释 block datasheet。 |
-| P1-L5 CMOS 工艺基础 | 中等支撑 | layout、latch-up、well/substrate 的背景。 |
-| P1-L6 MOS 晶体管 | 高支撑 | CMOS inverter/NAND/NOR 的 switching point 和 sizing。 |
-| P1-L7 Analog vs Digital | 高 | 为什么数字系统还需要模拟子系统；数字延迟/开关直觉。 |
+| Lecture 1.1 Introduction, History and Scale | 低直接考点 | 课程框架、半导体历史、数量级/dB；四年真题里直接考得很少。 |
+| Lecture 1.2 Design Process | 高 | 画/解释 mixed-signal IC design process，解释 block datasheet。 |
+| Lecture 1.3 CMOS and MOS Transistor | 高支撑 | CMOS 工艺背景、MOS 模型、CMOS inverter/NAND/NOR 的 switching point 和 sizing。 |
+| Lecture 1.4 Analog vs Digital | 高 | 为什么数字系统还需要模拟子系统；数字延迟/开关直觉。 |
 
 一句话：Part 1 不要把重点放在历史，而要放在 **设计流程 + MOS 模型 + 模拟/数字接口**。
 
@@ -213,4 +210,3 @@ CMOS 工艺基础本身不太单独计算，但会支撑 layout / reliability �
 - 能不能用 $\beta=k'W/L$ 做 switching point 计算？
 - 能不能解释 analog front-end 为什么必要？
 - 能不能把 well/substrate/pn junction 和 latch-up 联系起来？
-

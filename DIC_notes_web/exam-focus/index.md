@@ -5,6 +5,8 @@
 
 这套笔记是 **考点版**，不是 PPT 顺序版。写法以中文为主，只在专业术语、公式、VHDL 代码和题目常用关键词中保留英文。重要英文术语第一次出现时会给中文注释，例如：开关点（switching point）、版图（layout）、迟滞（hysteresis）。
 
+<a class="pdf-download" href="/pdf/dic-exam-focus.pdf">PDF Version</a>
+
 ## 文件
 
 - [Part 1：Introduction, History & Fundamentals](./part1_introduction_history_fundamentals.md)
@@ -36,4 +38,3 @@
 ## 特别提醒
 
 2025 Q1(d) 考了 **Flash ADC vs Pipeline ADC**。原 lecture 笔记里 Flash、SAR、Dual-slope 比较完整，但 Pipeline ADC 不够展开。本考点版已经补了流水线 ADC（Pipeline ADC）的结构、速度/分辨率/功耗比较和答题模板。
-

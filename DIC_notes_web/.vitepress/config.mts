@@ -132,7 +132,6 @@ const groupedSidebar = [
 ]
 
 export default defineConfig({
-  base: '/dic/',
   title: 'Design of Integrated Circuits',
   description: 'DIC lecture notes',
   cleanUrls: false,
@@ -150,6 +149,7 @@ export default defineConfig({
       { text: 'Grouped Notes', link: '/grouped/' },
       { text: 'Lectures', link: '/lectures/lec1' },
       { text: 'Exam Focus', link: '/exam-focus/' },
+      { text: 'PDF Version', link: '/pdf/dic-exam-focus.pdf' },
       { text: 'Exam Preparation', link: '/lectures/lec26' }
     ],
     sidebar: {

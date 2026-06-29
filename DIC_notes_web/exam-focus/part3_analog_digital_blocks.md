@@ -1,19 +1,20 @@
 # Part 3 考点版：Analog and Digital Blocks
 
-> 对应 P3-L1 到 P3-L13。  
+> 对应新款 grouped notes：Lecture 3.1 到 Lecture 3.4。  
 > Part 3 是最高收益部分：Schmitt trigger、CMOS logic、signal conditioning、ADC、layout supplement 都直接进过真题。
 
 ## 1. Part 3 到底怎么考
 
-| 考点 | 主要 lecture | 真题证据 | 优先级 |
+| 考点 | 新款笔记位置 | 真题证据 | 优先级 |
 |---|---|---|---|
-| 施密特触发器设计（Schmitt trigger design） | P3-L3 | 4/4 年 | 最高 |
-| CMOS 逻辑门 / switching point / AOI/OAI | P3-L8 | 4/4 年 | 最高 |
-| 信号调理（signal conditioning） | P3-L1/P3-L2 | 2022、2023、2024 | 高 |
-| layout reliability：latch-up / antenna | P3-L13 | 2023、2025 | 高 |
-| 模数转换器（ADC） | P3-L12 | 2025 | 中高 |
-| 运放增益级（op-amp gain stage） | P3-L1 | 2022 | 中 |
-| 电流镜、差分对、频率响应、传输门、锁存器、DAC | P3-L4 到 P3-L11 | 四年未见直接大题 | 低直接证据 |
+| 施密特触发器设计（Schmitt trigger design） | Lecture 3.1 Signal Conditioning and Schmitt Trigger | 4/4 年 | 最高 |
+| CMOS 逻辑门 / switching point / AOI/OAI | Lecture 3.2 Current Sources and Digital Blocks | 4/4 年 | 最高 |
+| 信号调理（signal conditioning） | Lecture 3.1 Signal Conditioning and Schmitt Trigger | 2022、2023、2024 | 高 |
+| layout reliability：latch-up / antenna | Lecture 3.4 Analog Layout Design | 2023、2025 | 高 |
+| 模数转换器（ADC） | Lecture 3.3 Frequency Response, DAC and ADC | 2025 | 中高 |
+| 运放增益级（op-amp gain stage） | Lecture 3.1 Signal Conditioning and Schmitt Trigger | 2022 | 中 |
+| 电流镜、差分对、传输门、锁存器/触发器 | Lecture 3.2 Current Sources and Digital Blocks | 四年未见直接大题 | 低直接证据 |
+| 频率响应、DAC | Lecture 3.3 Frequency Response, DAC and ADC | 四年未见直接大题 | 低直接证据 |
 
 ## 2. 考点 A：Signal conditioning
 

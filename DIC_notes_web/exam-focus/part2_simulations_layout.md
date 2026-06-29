@@ -1,17 +1,16 @@
 # Part 2 考点版：Simulations & Layout
 
-> 对应 P2-L1 到 P2-L5。  
+> 对应新款 grouped notes：Lecture 2.1 到 Lecture 2.4。  
 > Part 2 里最值得复习的是 VHDL 和版图（layout）。SPICE 在四年真题里没有直接大题，但可以作为 design flow 背景。
 
 ## 1. Part 2 到底怎么考
 
-| Lecture | 考试价值 | 常见考法 |
+| 新款笔记位置 | 考试价值 | 常见考法 |
 |---|---|---|
-| P2-L1 SPICE basics | 低直接考点 | 支撑 simulation / design flow 的解释。 |
-| P2-L2 SPICE analysis | 低直接考点 | 了解 `.OP/.DC/.AC/.TRAN` 用途即可。 |
-| P2-L3 VHDL fundamentals | 最高 | entity、port、architecture、三种描述方式。 |
-| P2-L4 VHDL examples | 高 | MUX、`case` vs `if/elsif`、structural 转 dataflow。 |
-| P2-L5 Analog layout | 高 | layout 定义、latch-up、antenna effect、matching。 |
+| Lecture 2.1 SPICE and Analysis Types | 低直接考点 | 支撑 simulation / design flow 的解释；了解 `.OP/.DC/.AC/.TRAN` 用途即可。 |
+| Lecture 2.2 VHDL Fundamentals | 最高 | entity、port、architecture、三种描述方式。 |
+| Lecture 2.3 Analog Layout Guidelines | 高 | layout 定义、latch-up、antenna effect、matching。 |
+| Lecture 2.4 VHDL Examples and Synthesis | 高 | MUX、`case` vs `if/elsif`、structural 转 dataflow。 |
 
 ## 2. 考点 A：VHDL 的 entity / port / architecture
 
@@ -298,4 +297,3 @@ SPICE 目前更像背景，不像真题核心计算。
 - 能不能写 dataflow architecture？
 - 能不能解释 layout、DRC、LVS、extraction？
 - 能不能解释 latch-up 和 antenna effect？
-
